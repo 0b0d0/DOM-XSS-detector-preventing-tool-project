@@ -1,12 +1,27 @@
 {
-"manifest_version":3,
+"manifest_version":2,
 "name":"DOM XSS detector",
 "description":"This extension is not complete",
-"version":"1.0.0",
-"browser_action":{
-    "default_icon":"coin.png",
-    "default_popup": "webpage.html"
-}
+"version":"1.0",
 
+"icons":{
+    "32": "coin.png"
+},
+
+"permissions":[ "cookies", "active-tab"
+,"background","userScripts","webNavigation"],
+
+"content_scripts": [
+    {
+        "matches":["*://*.mozilla.org/*"],
+        "js":["domDetector.js"]
+    }
+],
+
+"browser_specific_settings": {
+  "gecko": {
+    "id": "sample@example.com"
+  }
+}
 
 }
