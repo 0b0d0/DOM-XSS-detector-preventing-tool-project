@@ -8,12 +8,11 @@
     "32": "coin.png"
 },
 
-"permissions":[ "cookies", "active-tab"
-,"background","userScripts","webNavigation"],
+"permissions":[ "cookies","active-tab","tabs","scripting"],
 
 "content_scripts": [
     {
-        "matches":["*://*.mozilla.org/*"],
+        "matches":["<all_urls>"],
         "js":["domDetector.js"]
     }
 ],
@@ -25,3 +24,4 @@
 }
 
 }
+
