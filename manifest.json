@@ -1,0 +1,12 @@
+{
+"manifest_version":3,
+"name":"DOM XSS detector",
+"description":"This extension is not complete",
+"version":"1.0.0",
+"browser_action":{
+    "default_icon":"coin.png",
+    "default_popup": "webpage.html"
+}
+
+
+}
