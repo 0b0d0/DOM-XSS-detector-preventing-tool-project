@@ -1,8 +1,3 @@
-//These make the webpage to display url and cookie infor
-//and the string
-console.log("Testing this function");
-//alert(document.URL); //displays a pop up on browser
-//alert(document.cookie); //displays a pop up on browser
 
 function regExpDetection(){
 
@@ -26,5 +21,6 @@ function regExpDetection(){
 //displays result
 let checker=regExpDetection();
 console.log(checker);
+
 
 
