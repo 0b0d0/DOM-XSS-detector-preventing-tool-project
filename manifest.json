@@ -8,7 +8,12 @@
     "32": "coin.png"
 },
 
-"permissions":[ "cookies","active-tab","tabs","scripting"],
+"permissions":[ 
+    "cookies",
+    "active-tab",
+    "tabs",
+    "scripting"
+],
 
 "content_scripts": [
     {
@@ -24,4 +29,5 @@
 }
 
 }
+
 
