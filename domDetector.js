@@ -1,7 +1,7 @@
 
 /*common sinks list where payload can be executed*/
-const commonSinks=["alert()","document.write()","document.writeln()",
-    "javascript:","innerHTML"];
+const commonSinks=["alert","document\\.write","document\\.writeln",
+    "javascript:","innerHTML","eval"]; 
 
 //These make the webpage to display url and cookie infor
 //and the string
@@ -10,33 +10,31 @@ console.log("Testing this function");
 //alert(document.URL); //displays a pop up on browser
 //alert(document.cookie); //displays a pop up on browser
 
-function regExpDetection(){
-    /* checks if the script tag is present using regular expression, i means incase sensitive,
-    \s* means to match 0 or more space characters around the script tag, 'script' means to match script
-    '< match opening angle bracket','[^>]*' match any character except'>','>' match closing angle bracket*/
-
-    //expression for script tag
-    const CaseInsensitivesimpleRegEx=/<\s*script\s*[^>]*\/?>/i;
-
-    const input='<    script type="text/javascript" >';//input of a script tag as a string
-
-    //returns true value if the script tag can be read 
-    /*checks if the regular expressions are in the 
-    string with 0 or more changes to RegEx */
-    return CaseInsensitivesimpleRegEx.test(input);
-}
-//displays result
-let checker=regExpDetection();
-console.log(checker);
-
 //trying to detect script tags
-function detectScriptTags(){
-    //gets all script tags
-    let scriptTags=document.querySelectorAll('script');
-    scriptTags.forEach(script=>{
-        //console.log(script.src);//logs source file of javascript
-        //console.log(script.innerHTML);//gets content in the tag
+function detectSinks(){
+    //get some elements in the document (webpage)
+    //const vulnerableElements=document.querySelectorAll("input","textarea","div");
+
+    //check for all elements on web page
+    const vulnerableElements=document.querySelectorAll("*");
+    //combine the regular expression
+    const sinkPattern = new RegExp(
+        commonSinks.join("\\s*\$.*?\$|") + "\\s*\$.*?\$|" + 
+        commonSinks.join("\\s*\\s*") + "\\s*$",
+        "i"
+    );
+
+    //Double for Loop
+    vulnerableElements.forEach(element=>{
+        const info=element.innerHTML;
+        commonSinks.forEach(sink=>{
+            if(info.includes(sink)){
+                console.log(info,"is next to sink")
+                console.log("Detected sink", sink,"may be dangerous")
+            }
+        })
     })
 }
 //calling function
-detectScriptTags(); //this works
+detectSinks(); //this works
+
