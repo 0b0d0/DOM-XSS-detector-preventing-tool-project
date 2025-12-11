@@ -1,5 +1,7 @@
-/*global set to store contents in script tags */
-let infoOnScriptTags= new Set();
+
+/*common sinks list where payload can be executed*/
+const commonSinks=["alert()","document.write()","document.writeln()",
+    "javascript:","innerHTML"];
 
 //These make the webpage to display url and cookie infor
 //and the string
@@ -9,7 +11,6 @@ console.log("Testing this function");
 //alert(document.cookie); //displays a pop up on browser
 
 function regExpDetection(){
-
     /* checks if the script tag is present using regular expression, i means incase sensitive,
     \s* means to match 0 or more space characters around the script tag, 'script' means to match script
     '< match opening angle bracket','[^>]*' match any character except'>','>' match closing angle bracket*/
@@ -29,15 +30,13 @@ let checker=regExpDetection();
 console.log(checker);
 
 //trying to detect script tags
-function detectTags(){
+function detectScriptTags(){
     //gets all script tags
     let scriptTags=document.querySelectorAll('script');
     scriptTags.forEach(script=>{
         //console.log(script.src);//logs source file of javascript
         //console.log(script.innerHTML);//gets content in the tag
-        infoOnScriptTags.add(script.innerHTML);//adding script tags to set
     })
 }
 //calling function
-detectTags(); //this works
-console.log(infoOnScriptTags);
+detectScriptTags(); //this works
