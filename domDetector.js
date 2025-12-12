@@ -1,40 +1,33 @@
 
 /*common sinks list where payload can be executed*/
 const commonSinks=["alert","document\\.write","document\\.writeln",
-    "javascript:","innerHTML","eval"]; 
+    "javascript:","innerHTML","eval","document\\.cookie"]; 
+/*list for sources which is the input where 
+payload is executed*/
+const sources=["href","src","script ","oneerror=","onmouseover"];
 
+//get HTML content of web page
+const HTMLContent=document.documentElement.innerHTML;
 //These make the webpage to display url and cookie infor
 //and the string
 console.log("Testing this function");
-/*alert does not work in terminal only on web page*/
-//alert(document.URL); //displays a pop up on browser
-//alert(document.cookie); //displays a pop up on browser
 
-//trying to detect script tags
-function detectSinks(){
-    //get some elements in the document (webpage)
-    //const vulnerableElements=document.querySelectorAll("input","textarea","div");
-
-    //check for all elements on web page
-    const vulnerableElements=document.querySelectorAll("*");
-    //combine the regular expression
-    const sinkPattern = new RegExp(
-        commonSinks.join("\\s*\$.*?\$|") + "\\s*\$.*?\$|" + 
-        commonSinks.join("\\s*\\s*") + "\\s*$",
-        "i"
-    );
-
-    //Double for Loop
-    vulnerableElements.forEach(element=>{
-        const info=element.innerHTML;
-        commonSinks.forEach(sink=>{
-            if(info.includes(sink)){
-                console.log(info,"is next to sink")
-                console.log("Detected sink", sink,"may be dangerous")
-            }
-        })
-    })
+function detectSources(HTMLContent,sources){
+    //try catch error
+   try{
+    //filters sources that are found into a list
+    const foundSources=sources.filter(sources=>HTMLContent.includes(sources));
+    //logs found sources
+    //console.log(foundSources);
+    return foundSources;
+   }catch(error){
+    console.error(error);
+   }
 }
-//calling function
-detectSinks(); //this works
+detectSources(HTMLContent,sources);
 
+function contentInSources(list,HTMLContent){
+    
+}
+let li=detectSources(HTMLContent,sources);
+contentInSources(li);
