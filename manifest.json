@@ -18,7 +18,11 @@
 "content_scripts": [
     {
         "matches":["<all_urls>"],
-        "js":["domDetector.js"]
+        "js":[
+        "domDetector.js", 
+        "popUp.js",
+        "domXSSpayload.js"
+      ]
     }
 ],
 
@@ -27,13 +31,11 @@
     "id": "sample@example.com"
   }
 },
-    "browser_action": {
-    "default_icon":"coin.png",
-    "defualt-title":"Extension",
-    "default_popup": "interface.html"
+
+"browser_action": {
+  "default_icon":"coin.png",
+  "defualt-title":"Extension",
+  "default_popup": "interface.html"
 }
 
 }
-
-
-
