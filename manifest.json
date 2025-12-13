@@ -12,7 +12,8 @@
     "cookies",
     "active-tab",
     "tabs",
-    "scripting"
+    "scripting",
+    "https://github.com/adham-hashem/XSS-payloads/blob/main/Payloads.txt"
 ],
 
 "content_scripts": [
@@ -39,3 +40,4 @@
 }
 
 }
+
