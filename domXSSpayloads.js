@@ -49,11 +49,13 @@ function storeData(list,count){
 
 function getData(num){
     //convert array to json string
-    let jsonString=sessionStorage.getItem("payloads"+num);
-    if(jsonString){
+    let key="payloads"+num;
+    let jsonString=sessionStorage.getItem(key);
+    if(jsonString!==null){
         return JSON.parse(jsonString);//changes format to array
     }
     
 }
 
 getDataSet(websiteLinks);
+
