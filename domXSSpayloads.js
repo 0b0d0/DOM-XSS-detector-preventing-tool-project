@@ -1,33 +1,26 @@
 /*this file fetches dom xss payloads
-using fetch command*/
-let payloads=[];
-const websiteLinks=["https://github.com/adham-hashem/XSS-payloads/blob/main/Payloads.txt"];
+using fetch command.*/
+
+const websiteLinks=["https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt"];
 let retrieved=false;
 
 
 function getDataSet(url){
-  //trying to get data from website
+    //datasets numbered according to how many links there are
+        let payloadDataSet;
+    //trying to get data from website
     try{
-        for(let a=0;a<websiteLinks.length;a++){ //for loop to loop through websites to collect data set of dom xss payloads
+        for(let a=0;a<url.length;a++){ //for loop to loop through websites to collect data set of dom xss payloads
             fetch(url[a])
             .then(response=>response.text())
             .then(data=>{
-                //logs data received
-                //console.log(data);
                 
-                //console.log("Succesful getting payload dataset")
-                /*checking if dataset exists*/
-                if(url[0].includes(data)){
-                    console.log("Data is already included")
-                }else if(!url[a].includes(data)){
-                    //add data to the array
-                    payloads.push(data);
-                    console.log("Succesful getting payload dataset added to list")
-                    //console.log(data);   //just displaying the data
-            }
-
+            console.log("Succesful getting payload dataset added to list from",url[a])
+                    //divides string into list
+                    //displaying the data as a list due to split function and storing the list
+                //console.log(data.split("\n"));
+                storeData(data.split("\n"))
             })
-
         }
         
     }catch (error){
@@ -35,6 +28,17 @@ function getDataSet(url){
     }
 }
 
-getDataSet(websiteLinks);
+/*will try to store dataset into a large database
+using the indexed DB database
+will request to open the database*/
 
-//console.log("List of payloads",payloads)
+function storeData(list){
+    //convert array to json string
+    let jsonString=JSON.stringify(list);
+
+    //store JSON string in session storage
+    sessionStorage.setItem("paylaods",list); //this worked
+
+}
+
+getDataSet(websiteLinks);
