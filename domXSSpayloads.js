@@ -1,40 +1,33 @@
 /*this file fetches dom xss payloads
-using fetch command*/
-let payloads=[];
-const websiteLinks=["https://github.com/adham-hashem/XSS-payloads/blob/main/Payloads.txt"];
-let retrieved=false;
+using fetch command.*/
 
+const websiteLinks=["https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt"];
+var payloadDataSet=null;
 
-function getDataSet(url){
-  //trying to get data from website
+function getDataSet(url,num){
+    //trying to get data from website
     try{
-        for(let a=0;a<websiteLinks.length;a++){ //for loop to loop through websites to collect data set of dom xss payloads
-            fetch(url[a])
-            .then(response=>response.text())
-            .then(data=>{
-                //logs data received
-                //console.log(data);
-                
-                //console.log("Succesful getting payload dataset")
-                /*checking if dataset exists*/
-                if(url[0].includes(data)){
-                    console.log("Data is already included")
-                }else if(!url[a].includes(data)){
-                    //add data to the array
-                    payloads.push(data);
-                    console.log("Succesful getting payload dataset added to list")
-                    //console.log(data);   //just displaying the data
-            }
-
-            })
-
-        }
+        return fetch(url[num]).then(response=>response.text()).then(data=>{
+        console.log("Succesful getting payload dataset added to list from",url[num])
+        //divides string into list
+        //displaying the data as a list due to split function and storing the list
+        payloadDataSet=data.split("\n");
+        return payloadDataSet;
+       
+    })
+        
         
     }catch (error){
         alert("Error fetching dom xss payload dataset")
     }
 }
 
-getDataSet(websiteLinks);
-
-//console.log("List of payloads",payloads)
+let updatedDataset1,updatedDataset2,updatedDataset3;
+/*Gets data from function and passes it to  */
+getDataSet(websiteLinks, 0).then(payloadDataSet => {
+    // store result in golbal variable
+    // Now it should have the data
+    //console.log(payloadDataSet);
+    updatedDataset1=console.log(payloadDataSet);
+});
+console.log("New location to store paylaods from dataset",updatedDataset1);
