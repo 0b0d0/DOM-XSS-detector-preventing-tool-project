@@ -2,11 +2,9 @@
 
 const websiteLinks=["https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt"];
 let retrieved=false;
+let payloadDataSet=[];
 
-
-function getDataSet(url){
-    //datasets numbered according to how many links there are
-        let payloadDataSet;
+function getDataSet(url, list){
     //trying to get data from website
     try{
         for(let a=0;a<url.length;a++){ //for loop to loop through websites to collect data set of dom xss payloads
@@ -17,12 +15,10 @@ function getDataSet(url){
                     console.log("Succesful getting payload dataset added to list from",url[a])
                     //divides string into list
                     //displaying the data as a list due to split function and storing the list
-                    payloadDataSet=data.split("\n");
-                    //console.log(payloadDataSet);
+                    console.log(data.split("\n"));
+
                    
-
             })
-
         }
         
     }catch (error){
@@ -36,14 +32,24 @@ function getDataSet(url){
 //and the string
 console.log("Testing this function");
 
-function detectSources(){
+function detectPayloads(listOfPayloads){
+    var allElements=document.getElementsByTagName('*'); //contains all tags and their content
+    const d= new Date();
     //try catch error
+    /*there is alot of data in the innerHTML*/
    try{
-    
-   
+     Array.from(allElements).forEach(element => {
+        listOfPayloads.forEach(payload=>{
+            if(element.innerHTML.includes(payload)){
+                console.log(payload,"detected at",element.innerHTML);
+            } else{
+                console.log("None detected")
+            }
+        });
+        });
    }catch(error){
     console.error(error);
    }
 }
-detectSources();
+
 getDataSet(websiteLinks);
