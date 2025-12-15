@@ -19,7 +19,7 @@ function getDataSet(url){
                     //divides string into list
                     //displaying the data as a list due to split function and storing the list
                 //console.log(data.split("\n"));
-                storeData(data.split("\n"))
+                storeData(data.split("\n"),a)
             })
         }
         
@@ -32,13 +32,28 @@ function getDataSet(url){
 using the indexed DB database
 will request to open the database*/
 
-function storeData(list){
+function storeData(list,count){
     //convert array to json string
     let jsonString=JSON.stringify(list);
-
+    count=count=1 //every time it is called
     //store JSON string in session storage
-    sessionStorage.setItem("paylaods",list); //this worked
+    //check if item already exists
+    if(sessionStorage.getItem("payloads"+count)==false){
+        sessionStorage.setItem("payloads"+count,list); //this worked
+    }else{
+        console.log("Payload"+count, "already exists")
+    }
 
+
+}
+
+function getData(num){
+    //convert array to json string
+    let jsonString=sessionStorage.getItem("payloads"+num);
+    if(jsonString){
+        return JSON.parse(jsonString);//changes format to array
+    }
+    
 }
 
 getDataSet(websiteLinks);
