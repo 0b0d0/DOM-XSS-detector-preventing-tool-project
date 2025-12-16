@@ -1,6 +1,6 @@
 /*sinks for wehre the attack occurs
 
-[""] allows it look for each element that uses the source*/
+"[]" allows it look for each element that uses the source*/
 
 const htmlSources = [
     "[href]",            // For <a href=''>
@@ -60,6 +60,7 @@ let javascriptHolder=searchForSources(jsSources);
 
 //getDataSet(websiteLinks);
 const test='alert("XSS")';
+
 
 
 
