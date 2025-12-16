@@ -1,55 +1,50 @@
-/*this fetches dom xss payloads using fetch command.*/
+/*sinks for wehre the attack occurs*/
+const htmlSinks = [
+    "href",            // For <a href=''>
+    "src",             // For <img src=''>, <iframe src=''>
+    "src",             // Could also include <iframe src=''>
+    "innerHTML",      // For setting HTML content
+    "outerHTML",      // For outer HTML manipulation
+    "document.write"   // Directly writing to HTML
+];
 
-const websiteLinks=["https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt"];
-let retrieved=false;
-let payloadDataSet=[];
+const jsSinks = [
+    "eval",           // Executes a string as JavaScript
+    "setTimeout",     // Executes code after a delay, can take a string
+    "setInterval",    // Repeats execution of code at intervals, can take a string
+    "innerHTML",      // Can set HTML content from user input
+    "outerHTML",      // Similar to innerHTML but affects the entire element
+    "document.write",  // Writes HTML directly
+    "onclick",        // Inline event handler
+    "onload"         // Inline event handler for window load
+];
 
-function getDataSet(url, list){
-    //trying to get data from website
-    try{
-        for(let a=0;a<url.length;a++){ //for loop to loop through websites to collect data set of dom xss payloads
-            fetch(url[a])
-            .then(response=>response.text())
-            .then(data=>{
-                
-                    console.log("Succesful getting payload dataset added to list from",url[a])
-                    //divides string into list
-                    //displaying the data as a list due to split function and storing the list
-                    console.log(data.split("\n"));
+const cssSinks = [
+    "background-image", // Can take URLs, potentially dangerous
+    "expression",       // (Only in older IE versions)
+    "style"             // Any inline style attribute that can take user input
+];
 
-                   
-            })
-        }
-        
-    }catch (error){
-        alert("Error fetching dom xss payload dataset")
-    }
-}
 
-//get HTML content of web page
-//const HTMLContent=document.documentElement.innerHTML;
-//These make the webpage to display url and cookie infor
-//and the string
-console.log("Testing this function");
 
-function detectPayloads(listOfPayloads){
-    var allElements=document.getElementsByTagName('*'); //contains all tags and their content
-    const d= new Date();
-    //try catch error
+
+function isItSuspicous(input){
     /*there is alot of data in the innerHTML*/
    try{
-     Array.from(allElements).forEach(element => {
-        listOfPayloads.forEach(payload=>{
-            if(element.innerHTML.includes(payload)){
-                console.log(payload,"detected at",element.innerHTML);
-            } else{
-                console.log("None detected")
-            }
-        });
-        });
+    
+    /**/
    }catch(error){
     console.error(error);
    }
 }
 
-getDataSet(websiteLinks);
+function searchSources(elements){
+    elements.forEach(element => {
+        //display tag name of each source
+        console.log("Found",element.tagName)
+    });
+}
+searchSources(sources);
+//getDataSet(websiteLinks);
+const test='alert("XSS")';
+
