@@ -1,20 +1,24 @@
-/*sinks for wehre the attack occurs
 
-[""] allows it look for each element that uses the source*/
+
+const plainJsSources=[ "onclick", "onload","onkeydown","onmousedown"
+];
+const plainHtmlSources=["href","src"];
+
+/*Sources wehre the attack occurs by placing the sink in the source
+[""] allows it look for each element that uses the source
+and it applies to jquery style selectors*/
 
 const htmlSources = [
     "[href]",            // For <a href=''>
-    "[src]",             // For <img src=''>, <iframe src=''>
-    "[innerHTML]",      // For setting HTML content
-    "[outerHTML]"      // For outer HTML manipulation
+    "[src]"             // For <img src=''>, <iframe src=''>
 ];
 
+
 const jsSources = [
-    "[eval]",           // Executes a string as JavaScript
-    "[setTimeout]",     // Executes code after a delay, can take a string
-    "[setInterval]",    // Repeats execution of code at intervals, can take a string
     "[onclick]",        // Inline event handler
-    "[onload]"        // Inline event handler for window load
+    "[onload]",        // Inline event handler for window load
+    "[onkeydown]",
+    "[onmousedown]"
 ];
 //css may not work so i will stick with html and javascript for now
 const cssSources = [
@@ -23,25 +27,17 @@ const cssSources = [
     "style"             // Any inline style attribute that can take user input
 ];
 
-const sourceCalls={};
 
-
-function isItSuspicous(input){
-    /*there is alot of data in the innerHTML*/
-   try{
-    
-    /**/
-   }catch(error){
-    console.error(error);
-   }
-}
+/*functions   */
 
 //these only store one array with node lists i want to make each source have its own seperate array to compare
 const foundHtmlSources=[]; 
 const foundJavascriptSources=[];
 
 /*this stores the sources as well as the elemnts that use them but that contains an array with many arrays inside the one array
-so i try it make easier to  manage*/
+so i try it make easier to  manage
+
+it gets the tags that use the selected sources*/
 function searchForSources(sources,li){
     /*loop through each item in the source list*/
     //getting all
@@ -81,13 +77,28 @@ const seperateJavascriptArray=[];
     }
     return container;
 }
+//the elements are their seperate arrays to be analysed and the function stores the array
 let jsElements=joinNodeLists(jsSources,javascriptHolder,seperateJavascriptArray);
 let htmlElements=joinNodeLists(htmlSources,htmlHolder,seperateHtmlArray);
-console.log("Here is the array combined with the node lists length of javascript elements",jsElements);
-console.log("Here is the array combined with the node lists length of html elements",htmlElements);
+/*console.log("Here is the array combined with the node lists length of javascript elements",jsElements);
+console.log("Here is the array combined with the node lists length of html elements",htmlElements);*/
+
+//this needs to check for the value of the sources based on the array of xss sources
+function detectSinks(sourceArray,sources){
+    for(k=0;k<sourceArray.length;k++){
+        //console.log("Element",k,sourceArray[k]);
+        for(a=0;a<sources.length;a++){
+            if(sourceArray[k].getAttribute(sources[a])!==null){
+                 console.log("Value of attribute",sources[a],"in",sourceArray[k], "is", sourceArray[k].getAttribute(sources[a]));
+            }
+           
+        }
+    }
+}
+//detectSinks(jsElements,plainJsSources);
+detectSinks(htmlElements,plainHtmlSources);
 
 //getDataSet(websiteLinks);
 const test='alert("XSS")';
-
 
 
