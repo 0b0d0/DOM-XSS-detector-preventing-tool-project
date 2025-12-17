@@ -1,6 +1,10 @@
+/*sinks */
+sinks=["alert","eval","fetch","document.cookie","document.write","prompt"
+];
+/*regular expression for sinks to detect if a string is found */
+const sinksRegex = /\b(alert|eval|fetch|document\.cookie|document\.write|prompt)\s*\(?.*?\)?\b/g;
 
-
-const plainJsSources=[ "onclick", "onload","onkeydown","onmousedown"
+const plainJsSources=[ "onclick", "onload","onkeydown","onmousedown","onerror"
 ];
 const plainHtmlSources=["href","src"];
 
@@ -18,7 +22,9 @@ const jsSources = [
     "[onclick]",        // Inline event handler
     "[onload]",        // Inline event handler for window load
     "[onkeydown]",
-    "[onmousedown]"
+    "[onmousedown]",
+    "[onerror]"
+    
 ];
 //css may not work so i will stick with html and javascript for now
 const cssSources = [
@@ -89,7 +95,10 @@ function detectSinks(sourceArray,sources){
         //console.log("Element",k,sourceArray[k]);
         for(a=0;a<sources.length;a++){
             if(sourceArray[k].getAttribute(sources[a])!==null){
-                 console.log("Value of attribute",sources[a],"in",sourceArray[k], "is", sourceArray[k].getAttribute(sources[a]));
+                 //console.log("Value of attribute",sources[a],"in",sourceArray[k], "is", sourceArray[k].getAttribute(sources[a]));
+                 console.log("Element: ",sourceArray[k]);
+                 console.log("Attribute value",sources[a]);
+                 console.log("Element attribute value: ",sourceArray[k].getAttribute(sources[a]));
             }
            
         }
