@@ -13,7 +13,8 @@
     "active-tab",
     "tabs",
     "scripting",
-    "https://github.com/adham-hashem/XSS-payloads/blob/main/Payloads.txt"
+    "https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt"
+
 ],
 
 "content_scripts": [
@@ -22,7 +23,7 @@
         "js":[
         "domDetector.js", 
         "popUp.js",
-        "domXSSpayload.js"
+        "domXSSpayloads.js"
       ]
     }
 ],
@@ -40,4 +41,3 @@
 }
 
 }
-
