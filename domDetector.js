@@ -1,3 +1,6 @@
+/*importing dom purify to prevent dom xss after detecting it*/
+import DOMPurify from 'dompurify';
+
 /*sinks */
 sinks=["alert","eval","fetch","document.cookie","document.write","prompt"
 ];
@@ -7,30 +10,25 @@ const sinksRegex = /\b(alert|eval|fetch|document\.cookie|document\.write|prompt)
 const plainJsSources=[ "onclick", "onload","onkeydown","onmousedown","onerror"
 ];
 const plainHtmlSources=["href","src"];
+const plainCssSources=["background-image","expression","style"             
+];
 
 /*Sources wehre the attack occurs by placing the sink in the source
 [""] allows it look for each element that uses the source
 and it applies to jquery style selectors*/
 
 const htmlSources = [
-    "[href]",            // For <a href=''>
-    "[src]"             // For <img src=''>, <iframe src=''>
+    "[href]","[src]"             
 ];
 
 
 const jsSources = [
-    "[onclick]",        // Inline event handler
-    "[onload]",        // Inline event handler for window load
-    "[onkeydown]",
-    "[onmousedown]",
-    "[onerror]"
-    
+    "[onclick]","[onload]","[onkeydown]","[onmousedown]","[onerror]" 
 ];
+
 //css may not work so i will stick with html and javascript for now
 const cssSources = [
-    "background-image", // Can take URLs, potentially dangerous
-    "expression",       // (Only in older IE versions)
-    "style"             // Any inline style attribute that can take user input
+    "[background-image]","[expression]","[style]"             
 ];
 
 
@@ -39,6 +37,7 @@ const cssSources = [
 //these only store one array with node lists i want to make each source have its own seperate array to compare
 const foundHtmlSources=[]; 
 const foundJavascriptSources=[];
+const foundCssSources=[];
 
 /*this stores the sources as well as the elemnts that use them but that contains an array with many arrays inside the one array
 so i try it make easier to  manage
@@ -60,19 +59,22 @@ let htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO store
 //using flat function with INIFINITY combine sub arrays into one array
 //console.log("Elements that use the html sources",htmlHolder.flat(Infinity));  //does not flatten the way i wanted it TO
 let javascriptHolder=searchForSources(jsSources,foundJavascriptSources);
+let cssHolder=searchForSources(cssSources,foundCssSources);
 //console.log("Elements that use the following javascript source",javascriptHolder);
-//console.log("Elements that use the following html source",htmlHolder);
+//console.log("Elements that use the following css source",cssHolder);
 
 
 //trying break down list into seperate list
 const seperateHtmlArray=[];
 const seperateJavascriptArray=[];
+const seperateCssArray=[];
+
 
  function joinNodeLists(sourceItems,sourceHolder,container){
     for(z=0;z<sourceHolder.length;z++){
         for(y=0;y<sourceHolder[z].length;y++){
             //accesses each item in the node list
-            //console.log(sourceHolder[z][y])
+          
             //storing the node list into a seperate list to make them easy to check
             //check if a node list is empty
             
@@ -86,19 +88,34 @@ const seperateJavascriptArray=[];
 //the elements are their seperate arrays to be analysed and the function stores the array
 let jsElements=joinNodeLists(jsSources,javascriptHolder,seperateJavascriptArray);
 let htmlElements=joinNodeLists(htmlSources,htmlHolder,seperateHtmlArray);
+let cssElements=joinNodeLists(cssSources,cssHolder,seperateCssArray);
 /*console.log("Here is the array combined with the node lists length of javascript elements",jsElements);
-console.log("Here is the array combined with the node lists length of html elements",htmlElements);*/
+console.log("Here is the array combined with the node lists length of html elements",htmlElements);
+console.log("NOde lists combined into one array for css: ",cssElements)*/
+
 
 //this needs to check for the value of the sources based on the array of xss sources
 function detectSinks(sourceArray,sources){
     for(k=0;k<sourceArray.length;k++){
         //console.log("Element",k,sourceArray[k]);
         for(a=0;a<sources.length;a++){
-            if(sourceArray[k].getAttribute(sources[a])!==null){
-                 //console.log("Value of attribute",sources[a],"in",sourceArray[k], "is", sourceArray[k].getAttribute(sources[a]));
-                 console.log("Element: ",sourceArray[k]);
-                 console.log("Attribute value",sources[a]);
-                 console.log("Element attribute value: ",sourceArray[k].getAttribute(sources[a]));
+            try{
+                const attributeValue=sourceArray[k].getAttribute(sources[a]);
+
+                if(attributeValue!==null){//is attribute value empty
+                    if(sinksRegex.test(attributeValue)){ //checking attribute value matches with the sinks regular expression
+                        console.log("Found dom xss payload at",sourceArray[k]);
+                        const cleanedValue=DOMPurify.sanitize(attributeValue);
+                        console.log("Element attribute after being santised",cleanedValue); //gets attribute
+                        //when payload has been found it is santised
+                        //replacing the ttribute
+                        sourceArray[k].setAttribute(sources[a],cleanedValue);
+                        console.log("Element tag after being sanitised",sourceArray[k]);
+            }
+            } 
+
+            }catch(error){
+                console.error("Could not process",sourceArray[k],"Error: ",error);
             }
            
         }
