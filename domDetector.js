@@ -103,7 +103,8 @@ function detectSinks(sourceArray,sources){
                 const attributeValue=sourceArray[k].getAttribute(sources[a]);
 
                 if(attributeValue!==null){//is attribute value empty
-                    if(sinksRegex.test(attributeValue)){ //checking attribute value matches with the sinks regular expression
+                    if(sinksRegex.test(attributeValue)|| base64regex.test(attributeValue)){ 
+                        //checking attribute value matches with the sinks OR base64 regular expression
                         console.log("Found dom xss payload at",sourceArray[k]);
                         const cleanedValue=DOMPurify.sanitize(attributeValue);
                         console.log("Element attribute after being santised",cleanedValue); //gets attribute
@@ -130,5 +131,6 @@ function main(){
 }
 //getDataSet(websiteLinks);
 const test='alert("XSS")';
+
 
 
