@@ -1,11 +1,11 @@
-/*importing dom purify to prevent dom xss after detecting it*/
-import DOMPurify from 'dompurify';
 
 /*sinks */
 sinks=["alert","eval","fetch","document.cookie","document.write","prompt"
 ];
-/*regular expression for sinks to detect if a string is found */
+/*regular expression for sinks to detect if a string is found 
+regular expression for base64 encoding as well*/
 const sinksRegex = /\b(alert|eval|fetch|document\.cookie|document\.write|prompt)\s*\(?.*?\)?\b/g;
+const base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
 
 const plainJsSources=[ "onclick", "onload","onkeydown","onmousedown","onerror"
 ];
@@ -70,7 +70,9 @@ const seperateJavascriptArray=[];
 const seperateCssArray=[];
 
 
- function joinNodeLists(sourceItems,sourceHolder,container){
+ function joinNodeLists(sourceHolder,container){
+    /*array length is but it has other lists inside etc:
+     array [node list1, node list 2]*/
     for(z=0;z<sourceHolder.length;z++){
         for(y=0;y<sourceHolder[z].length;y++){
             //accesses each item in the node list
@@ -86,12 +88,10 @@ const seperateCssArray=[];
     return container;
 }
 //the elements are their seperate arrays to be analysed and the function stores the array
-let jsElements=joinNodeLists(jsSources,javascriptHolder,seperateJavascriptArray);
-let htmlElements=joinNodeLists(htmlSources,htmlHolder,seperateHtmlArray);
-let cssElements=joinNodeLists(cssSources,cssHolder,seperateCssArray);
-/*console.log("Here is the array combined with the node lists length of javascript elements",jsElements);
-console.log("Here is the array combined with the node lists length of html elements",htmlElements);
-console.log("NOde lists combined into one array for css: ",cssElements)*/
+let jsElements=joinNodeLists(javascriptHolder,seperateJavascriptArray);
+let htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);
+let cssElements=joinNodeLists(cssHolder,seperateCssArray);
+
 
 
 //this needs to check for the value of the sources based on the array of xss sources
@@ -124,6 +124,10 @@ function detectSinks(sourceArray,sources){
 //detectSinks(jsElements,plainJsSources);
 detectSinks(htmlElements,plainHtmlSources);
 
+
+function main(){
+    
+}
 //getDataSet(websiteLinks);
 const test='alert("XSS")';
 
