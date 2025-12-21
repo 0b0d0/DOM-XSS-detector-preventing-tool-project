@@ -10,7 +10,7 @@ const base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}
 const plainJsSources=[ "onclick", "onload","onkeydown","onmousedown","onerror"
 ];
 const plainHtmlSources=["href","src"];
-const plainCssSources=["background-image","expression","style"             
+const plainCssSources=["background-image","expression","style"
 ];
 
 /*Sources wehre the attack occurs by placing the sink in the source
@@ -23,7 +23,7 @@ const htmlSources = [
 
 
 const jsSources = [
-    "[onclick]","[onload]","[onkeydown]","[onmousedown]","[onerror]" 
+    "[onclick]","[onload]","[onkeydown]","[onmousedown]","[onerror]"
 ];
 
 //css may not work so i will stick with html and javascript for now
@@ -54,14 +54,14 @@ function searchForSources(sources,li){
     return li //stores the values in the array that stores node lists
 }
 
-
+//These values store the elemets that use the sources but the elements are stored in seperate arrays
 let htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO stores the values in the array that stores node lists
-//using flat function with INIFINITY combine sub arrays into one array
-//console.log("Elements that use the html sources",htmlHolder.flat(Infinity));  //does not flatten the way i wanted it TO
+
 let javascriptHolder=searchForSources(jsSources,foundJavascriptSources);
 let cssHolder=searchForSources(cssSources,foundCssSources);
 //console.log("Elements that use the following javascript source",javascriptHolder);
 //console.log("Elements that use the following css source",cssHolder);
+
 
 
 //trying break down list into seperate list
@@ -69,7 +69,7 @@ const seperateHtmlArray=[];
 const seperateJavascriptArray=[];
 const seperateCssArray=[];
 
-
+//this functions combines the sources for each categratory into one array
  function joinNodeLists(sourceHolder,container){
     /*array length is but it has other lists inside etc:
      array [node list1, node list 2]*/
@@ -91,8 +91,28 @@ const seperateCssArray=[];
 let jsElements=joinNodeLists(javascriptHolder,seperateJavascriptArray);
 let htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);
 let cssElements=joinNodeLists(cssHolder,seperateCssArray);
+//console.log("JavScript sources",jsElements);
 
+/*trying tp get script tag becuase this is a hard source to check */
+function detectContentFromScriptElement(){
+    const scriptTags=document.querySelectorAll("script");
 
+    scriptTags.forEach((script)=>{//check if script content is null and see if it matches regular expressions
+        if(script.textContent!==null){
+            if(sinksRegex.test(script.textContent) ||base64regex.test(script.textContent)){
+                console.log("Payload found at",script.textContent);
+                //changing text content when found to prevent payload execution
+                script.textContent='console.log("Change the value of the payload")';
+
+            }
+            
+
+        }
+
+    })
+
+}
+//detectContentFromScriptElement();
 
 //this needs to check for the value of the sources based on the array of xss sources
 function detectSinks(sourceArray,sources){
@@ -103,14 +123,14 @@ function detectSinks(sourceArray,sources){
                 const attributeValue=sourceArray[k].getAttribute(sources[a]);
 
                 if(attributeValue!==null){//is attribute value empty
-                    if(sinksRegex.test(attributeValue)|| base64regex.test(attributeValue)){ 
-                        //checking attribute value matches with the sinks OR base64 regular expression
+                    if(sinksRegex.test(attributeValue) || base64regex.test(attributeValue)){ 
+                        //checking attribute value matches with the sinks regular expression or the base64 regular expression
                         console.log("Found dom xss payload at",sourceArray[k]);
-                        const cleanedValue=DOMPurify.sanitize(attributeValue);
-                        console.log("Element attribute after being santised",cleanedValue); //gets attribute
+                        //const cleanedValue=DOMPurify.sanitize(attributeValue);
+                        //console.log("Element attribute after being santised",cleanedValue); //gets attribute
                         //when payload has been found it is santised
                         //replacing the ttribute
-                        sourceArray[k].setAttribute(sources[a],cleanedValue);
+                        sourceArray[k].setAttribute(sources[a],"");
                         console.log("Element tag after being sanitised",sourceArray[k]);
             }
             } 
@@ -122,15 +142,13 @@ function detectSinks(sourceArray,sources){
         }
     }
 }
-//detectSinks(jsElements,plainJsSources);
-detectSinks(htmlElements,plainHtmlSources);
+
+/*detectSinks(jsElements,plainJsSources);
+detectSinks(cssElements,plainCssSources);
+detectSinks(htmlElements,plainHtmlSources);*/
+/*Would like to call function every x minutes */
 
 
-function main(){
-    
-}
-//getDataSet(websiteLinks);
-const test='alert("XSS")';
 
 
 
