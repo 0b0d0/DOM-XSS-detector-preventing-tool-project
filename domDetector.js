@@ -1,11 +1,12 @@
 
-/*sinks */
-sinks=["alert","eval","fetch","document.cookie","document.write","prompt"
+sinks=["alert","eval","fetch","document.cookie","document.write","prompt","attr",
+    "$"
 ];
 /*regular expression for sinks to detect if a string is found 
 regular expression for base64 encoding as well*/
-const sinksRegex = /\b(alert|eval|fetch|document\.cookie|document\.write|prompt)\s*\(?.*?\)?\b/g;
+const sinksRegex = /\b(alert|eval|fetch|document\.cookie|document\.write|prompt|attr)\s*\(?.*?\)?\b/g;
 const base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
+
 
 const plainJsSources=[ "onclick", "onload","onkeydown","onmousedown","onerror"
 ];
@@ -147,6 +148,7 @@ function detectSinks(sourceArray,sources){
 detectSinks(cssElements,plainCssSources);
 detectSinks(htmlElements,plainHtmlSources);*/
 /*Would like to call function every x minutes */
+
 
 
 
