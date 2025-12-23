@@ -5,10 +5,8 @@ sinks=["alert","eval","fetch","document.cookie","document.write","prompt","attr"
 /*regular expression for sinks to detect if a string is found 
 regular expression for base64 encoding as well*/
 
-const sinksRegex = /\b(alert|eval|fetch|document\.cookie|document\.write|prompt|attr)\s*\(\s*[^()]*\s*\)\b/g;
-
-
-const plainJsSources=[ "onclick", "onload","onkeydown","onmousedown","onerror"
+const plainJsSources=[ "onclick", "onload","onkeydown","onmousedown","onerror",
+    "ondrag","oncopy"
 ];
 const plainHtmlSources=["href","src"];
 const plainCssSources=["background-image","expression","style"
@@ -25,13 +23,13 @@ const htmlSources = [
 
 const jsSources = [
     "[onclick]","[onload]","[onkeydown]","[onmousedown]","[onerror]",
+    "[ondrag]","[oncopy]"
 ];
 
 //css may not work so i will stick with html and javascript for now
 const cssSources = [
     "[background-image]","[expression]","[style]"             
 ];
-
 
 /*functions   */
 
@@ -159,4 +157,5 @@ function main(){
 
 }
 main();
+
 
