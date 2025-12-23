@@ -1,49 +1,35 @@
 /*this file fetches dom xss payloads
 using fetch command.*/
 
-const websiteLinks=["https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt"];
-let retrieved=false;
+const websiteLinks=["https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt",
+    "https://raw.githubusercontent.com/payloadbox/xss-payload-list/master/Intruder/xss-payload-list.txt"
+];
 
 
-function getDataSet(url){
-    //datasets numbered according to how many links there are
-        let payloadDataSet;
+function getDataSet(url,num){
     //trying to get data from website
     try{
-        for(let a=0;a<url.length;a++){ //for loop to loop through websites to collect data set of dom xss payloads
-            fetch(url[a])
-            .then(response=>response.text())
-            .then(data=>{
-                
-                    console.log("Succesful getting payload dataset added to list from",url[a])
-                    //divides string into list
-                    //displaying the data as a list due to split function and storing the list
-                    payloadDataSet=data.split("\n");
-                    console.log(payloadDataSet);
-
-            })
-
-        }
+        return fetch(url[num]).then(response=>response.text()).then(data=>{
+        console.log("Succesful getting payload dataset added to list from",url[num])
+        //divides string into list
+        //displaying the data as a list due to split function and storing the list
+        payloadDataSet=data.split("\n");
+        return payloadDataSet;
+       
+    })
+        
         
     }catch (error){
         alert("Error fetching dom xss payload dataset")
     }
 }
-
-/*will try to store dataset into a large database
-using the indexed DB database
-will request to open the database*/
-/*function openDataSet(){
-    let db;
-    const request=window.indexedDB.open("PayloadsDatabase");
-    request.onerror=(event)=>{
-        console.error("Not allowed to use IndexedDB");
-    };
-    request.onsuccess=(event)=>{
-        db=event.target.result;
-        console.log("success")
-    };
-}*/
-
-//openDataSet();
-getDataSet(websiteLinks);
+//variables to store datasets depending on if they come from diffrent web links
+let updatedDataset1,updatedDataset2,updatedDataset3;
+/*Gets data from function and passes it to  */
+getDataSet(websiteLinks, 1).then(payloadDataSet => {
+    // store result in golbal variable
+    // Now it should have the data
+    console.log(payloadDataSet);
+    //updatedDataset1=console.log(payloadDataSet);
+});
+//console.log("New location to store paylaods from dataset",updatedDataset1);
