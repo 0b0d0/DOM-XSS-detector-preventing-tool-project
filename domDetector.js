@@ -1,11 +1,11 @@
-
+/*sinks */
 sinks=["alert","eval","fetch","document.cookie","document.write","prompt","attr",
     "$"
 ];
 /*regular expression for sinks to detect if a string is found 
 regular expression for base64 encoding as well*/
-const sinksRegex = /\b(alert|eval|fetch|document\.cookie|document\.write|prompt|attr)\s*\(?.*?\)?\b/g;
-const base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
+
+const sinksRegex = /\b(alert|eval|fetch|document\.cookie|document\.write|prompt|attr)\s*\(\s*[^()]*\s*\)\b/g;
 
 
 const plainJsSources=[ "onclick", "onload","onkeydown","onmousedown","onerror"
@@ -24,7 +24,7 @@ const htmlSources = [
 
 
 const jsSources = [
-    "[onclick]","[onload]","[onkeydown]","[onmousedown]","[onerror]"
+    "[onclick]","[onload]","[onkeydown]","[onmousedown]","[onerror]",
 ];
 
 //css may not work so i will stick with html and javascript for now
@@ -60,9 +60,6 @@ let htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO store
 
 let javascriptHolder=searchForSources(jsSources,foundJavascriptSources);
 let cssHolder=searchForSources(cssSources,foundCssSources);
-//console.log("Elements that use the following javascript source",javascriptHolder);
-//console.log("Elements that use the following css source",cssHolder);
-
 
 
 //trying break down list into seperate list
@@ -88,32 +85,33 @@ const seperateCssArray=[];
     }
     return container;
 }
-//the elements are their seperate arrays to be analysed and the function stores the array
+//the elements are seperate arrays to be analysed and the function combines the node lists into one ARRAY
 let jsElements=joinNodeLists(javascriptHolder,seperateJavascriptArray);
 let htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);
 let cssElements=joinNodeLists(cssHolder,seperateCssArray);
-//console.log("JavScript sources",jsElements);
+
+/*console.log("JavaScript sources",jsElements);
+console.log("Html sources",htmlElements);
+console.log("CSS sources",cssElements);*/
 
 /*trying tp get script tag becuase this is a hard source to check */
 function detectContentFromScriptElement(){
     const scriptTags=document.querySelectorAll("script");
 
-    scriptTags.forEach((script)=>{//check if script content is null and see if it matches regular expressions
+    scriptTags.forEach((script, index)=>{//check if script content is null and see if it matches regular expressions
+        //text context contains the syntax inside the script tags etc <script>console.log("bye")</script>
         if(script.textContent!==null){
-            if(sinksRegex.test(script.textContent) ||base64regex.test(script.textContent)){
+            if(sinksRegex.test(script.textContent)){
                 console.log("Payload found at",script.textContent);
-                //changing text content when found to prevent payload execution
-                script.textContent='console.log("Change the value of the payload")';
+                //encoding is done to prevent the dom payload from executing
+                console.log("Script tag text content after being encoded",btoa(script.textContent));
 
             }
-            
-
         }
 
     })
 
 }
-//detectContentFromScriptElement();
 
 //this needs to check for the value of the sources based on the array of xss sources
 function detectSinks(sourceArray,sources){
@@ -124,15 +122,12 @@ function detectSinks(sourceArray,sources){
                 const attributeValue=sourceArray[k].getAttribute(sources[a]);
 
                 if(attributeValue!==null){//is attribute value empty
-                    if(sinksRegex.test(attributeValue) || base64regex.test(attributeValue)){ 
-                        //checking attribute value matches with the sinks regular expression or the base64 regular expression
+                    if(sinksRegex.test(attributeValue)){ 
+                        //checking attribute value matches with the sinks regular expression 
                         console.log("Found dom xss payload at",sourceArray[k]);
-                        //const cleanedValue=DOMPurify.sanitize(attributeValue);
-                        //console.log("Element attribute after being santised",cleanedValue); //gets attribute
-                        //when payload has been found it is santised
-                        //replacing the ttribute
-                        sourceArray[k].setAttribute(sources[a],"");
-                        console.log("Element tag after being sanitised",sourceArray[k]);
+                        //encoding is done to prevent the dom payload from executing
+                        console.log("Element tag attribute after being encoded",btoa(attributeValue));
+                        console.log("Element tag after the attribute value is encoded",sourceArray[k]);
             }
             } 
 
@@ -142,15 +137,26 @@ function detectSinks(sourceArray,sources){
            
         }
     }
+   
 }
 
-/*detectSinks(jsElements,plainJsSources);
-detectSinks(cssElements,plainCssSources);
-detectSinks(htmlElements,plainHtmlSources);*/
+
+
 /*Would like to call function every x minutes */
 
+/*Where main program starts */
+function main(){
 
+    /*detectSinks(jsElements,plainJsSources);
+    detectSinks(cssElements,plainCssSources);
+    detectSinks(htmlElements,plainHtmlSources);
+    detectContentFromScriptElement();*/
+    //i THINK setting the array lengths to zero worked
 
+    console.log("JavaScript sources",jsElements[0]);
+    console.log("Html sources",htmlElements[0]);
+    console.log("CSS sources",cssElements[0])
 
-
+}
+main();
 
