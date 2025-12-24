@@ -1,14 +1,16 @@
 /*sinks */
 sinks=["alert","eval","fetch","document.cookie","document.write","prompt","attr",
-    "$"
+    "document.location"
 ];
+
 /*regular expression for sinks to detect if a string is found 
-regular expression for base64 encoding as well*/
+*/
 
 const sinksRegex = new RegExp(`\\b(${sinks.join("|")})\\s*[^)\\s]*`, 'g');
 
+
 const plainJsSources=[ "onclick", "onload","onkeydown","onmousedown","onerror",
-    "ondrag","oncopy"
+    "ondrag","oncopy","onmouseoever"
 ];
 const plainHtmlSources=["href","src"];
 const plainCssSources=["background-image","expression","style"
@@ -25,13 +27,14 @@ const htmlSources = [
 
 const jsSources = [
     "[onclick]","[onload]","[onkeydown]","[onmousedown]","[onerror]",
-    "[ondrag]","[oncopy]"
+    "[ondrag]","[oncopy]","[onmouseover]"
 ];
 
 //css may not work so i will stick with html and javascript for now
 const cssSources = [
     "[background-image]","[expression]","[style]"             
 ];
+
 
 /*functions   */
 
@@ -117,32 +120,29 @@ function detectContentFromScriptElement(){
 function detectSinks(sourceArray,sources){
     for(k=0;k<sourceArray.length;k++){
         //console.log("Element",k,sourceArray[k]);
-        for(a=0;a<sources.length;a++){
-            try{
-                const attributeValue=sourceArray[k].getAttribute(sources[a]);
-
-                if(attributeValue!==null){//is attribute value empty
-                    if(sinksRegex.test(attributeValue)){ 
-                        //checking attribute value matches with the sinks regular expression 
-                        console.log("Found dom xss payload at",sourceArray[k]);
-                        //encoding is done to prevent the dom payload from executing
-                        console.log("Element tag attribute after being encoded",btoa(attributeValue));
-                        console.log("Element tag after the attribute value is encoded",sourceArray[k]);
-            }
+       try{
+            //const attributeValue=sourceArray[k].getAttribute(sources[a]);
+            //if(sourceArray[k]!==null){//is attribute value empty
+                if(sinksRegex.test(String(sourceArray[k]))){ 
+                            //checking attribute value matches the pattern with the sinks regular expression 
+                    console.log("Found dom xss payload at",sourceArray[k]);
+                            //encoding is done to prevent the dom payload from executing
+                    console.log("Element tag attribute after being encoded",btoa(sourceArray[k]));
+                    //if i want to rpevent the xss by removing the element
+                    //sourceArray[k].remove()
+            
             } 
 
-            }catch(error){
+            //}
+           
+        }catch(error){
                 console.error("Could not process",sourceArray[k],"Error: ",error);
             }
-           
-        }
     }
    
 }
 
-
-
-/*Would like to call function every x minutes */
+/*Would like to call main function every x minutes */
 
 /*Where main program starts */
 function main(){
@@ -159,6 +159,7 @@ function main(){
 
 }
 main();
+
 
 
 
