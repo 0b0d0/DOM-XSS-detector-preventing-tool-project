@@ -5,7 +5,7 @@ sinks=["alert","eval","fetch","document.cookie","document.write","prompt","attr"
 /*regular expression for sinks to detect if a string is found 
 regular expression for base64 encoding as well*/
 
-const sinksRegex =new RegExp(`\\b(${sinks.join("|")})\\s*\\(\\s*.*?\\s*\\)`, 'g');
+const sinksRegex = new RegExp(`\\b(${sinks.join("|")})\\s*[^)\\s]*`, 'g');
 
 const plainJsSources=[ "onclick", "onload","onkeydown","onmousedown","onerror",
     "ondrag","oncopy"
@@ -159,6 +159,7 @@ function main(){
 
 }
 main();
+
 
 
 
