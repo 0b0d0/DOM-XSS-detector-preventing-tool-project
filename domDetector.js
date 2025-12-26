@@ -107,8 +107,8 @@ function detectContentFromScriptElement(){
             if(sinksRegex.test(script.textContent)){
                 console.log("Payload found at",script.textContent);
                 //encoding is done to prevent the dom payload from executing
-                console.log("Script tag text content after being encoded",btoa(script.textContent));
-
+                console.log("Script tag text content after being encoded", 
+                btoa(String.fromCharCode(...new TextEncoder().encode(script.textContent)))); //this works
             }
         }
 
@@ -159,6 +159,7 @@ function main(){
 
 }
 main();
+
 
 
 
