@@ -11,8 +11,6 @@ const improvedSinksRegex = new RegExp(`\\b(?:${sinks.join("|")})\\s*\\([^()]*\\)
 //AN IMPROVED sinksRegex will test later
 
 
-const plainJsSources=[ 
-];
 const plainHtmlSources=["href","src","onclick", "onload","onkeydown","onmousedown","onerror",
     "ondrag","oncopy","onmouseoever","onloadstart"];
 const plainCssSources=["background-image","expression","style"
@@ -23,13 +21,8 @@ const plainCssSources=["background-image","expression","style"
 and it applies to jquery style selectors*/
 
 const htmlSources = [
-    "[href]","[src]"             
-];
-
-
-const jsSources = [
-    "[onclick]","[onload]","[onkeydown]","[onmousedown]","[onerror]",
-    "[ondrag]","[oncopy]","[onmouseover]"
+    "[href]","[src]","[onclick]","[onload]","[onkeydown]","[onmousedown]","[onerror]",
+    "[ondrag]","[oncopy]","[onmouseover]","[onloadstart]"           
 ];
 
 //css may not work so i will stick with html and javascript for now
@@ -161,6 +154,7 @@ function main(){
 
 }
 main();
+
 
 
 
