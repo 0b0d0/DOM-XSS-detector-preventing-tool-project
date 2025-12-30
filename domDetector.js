@@ -3,16 +3,18 @@ sinks=["alert","eval","fetch","document.cookie","document.write","prompt","attr"
     "document.location"
 ];
 
-/*regular expression for sinks to detect if a string is found 
-*/
-
+//using either one of them
 const sinksRegex = new RegExp(`\\b(${sinks.join("|")})\\s*[^)\\s]*`, 'g');
+const improvedSinksRegex = new RegExp(`\\b(?:${sinks.join("|")})\\s*\\([^()]*\\)|\\b(?:${sinks.join("|")})
+\\s*=[^;]*|\\b(?:${sinks.join("|")})\\s*\\([^)]*[^()]*\\)|\\b(?:${sinks.join("|")})\\s*\\+\\s*["'']`, 'gi');
+
+//AN IMPROVED sinksRegex will test later
 
 
-const plainJsSources=[ "onclick", "onload","onkeydown","onmousedown","onerror",
-    "ondrag","oncopy","onmouseoever"
+const plainJsSources=[ 
 ];
-const plainHtmlSources=["href","src"];
+const plainHtmlSources=["href","src","onclick", "onload","onkeydown","onmousedown","onerror",
+    "ondrag","oncopy","onmouseoever","onloadstart"];
 const plainCssSources=["background-image","expression","style"
 ];
 
@@ -159,6 +161,7 @@ function main(){
 
 }
 main();
+
 
 
 
