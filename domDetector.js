@@ -5,8 +5,13 @@ sinks=["alert","eval","fetch","document.cookie","document.write","prompt","attr"
 
 //using either one of them
 const sinksRegex = new RegExp(`\\b(${sinks.join("|")})\\s*[^)\\s]*`, 'g');
-const improvedSinksRegex = new RegExp(`\\b(?:${sinks.join("|")})\\s*\\([^()]*\\)|\\b(?:${sinks.join("|")})
-\\s*=[^;]*|\\b(?:${sinks.join("|")})\\s*\\([^)]*[^()]*\\)|\\b(?:${sinks.join("|")})\\s*\\+\\s*["'']`, 'gi');
+const improvedSinksRegex = new RegExp(
+    `\\b(?:${sinks.join("|")})\\s*\\([^()]*\\)|` + // Function calls
+    `\\b(?:${sinks.join("|")})\\s*=[^;]*|` + // Assignments
+    `\\b(?:${sinks.join("|")})\\s*\\([^)]*[^()]*\\)|` + // Nested function calls
+    `\\b(?:${sinks.join("|")})\\s*\\+\\s*["']`, // String concatenation
+    'gi'
+);
 
 //AN IMPROVED sinksRegex will test later
 
@@ -154,6 +159,7 @@ function main(){
 
 }
 main();
+
 
 
 
