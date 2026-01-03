@@ -98,23 +98,37 @@ console.log("Html sources",htmlElements);
 console.log("CSS sources",cssElements);*/
 
 /*trying tp get script tag becuase this is a hard source to check */
+/*trying tp get script tag becuase this is a hard source to check */
 function detectContentFromScriptElement(){
     const scriptTags=document.querySelectorAll("script");
-
-    scriptTags.forEach((script, index)=>{//check if script content is null and see if it matches regular expressions
+    let arr=[];
+    scriptTags.forEach((script)=>{//check if script content is null and see if it matches regular expressions
+        arr.push(script.textContent.split(", "));
         //text context contains the syntax inside the script tags etc <script>console.log("bye")</script>
-        if(script.textContent!==null){
-            if(sinksRegex.test(script.textContent)){
+        /*if(script.textContent!==null){
+            if(improvedSinksRegex.test(script.textContent)){
                 console.log("Payload found at",script.textContent);
                 //encoding is done to prevent the dom payload from executing
                 console.log("Script tag text content after being encoded", 
                 btoa(String.fromCharCode(...new TextEncoder().encode(script.textContent)))); //this works
+
             }
-        }
+        }*/
 
     })
+    return arr
 
 }
+let foundScripts=detectContentFromScriptElement();
+
+/*this search through each item of the array, because the array stored contains sub arrays which contain elements.
+so eq=ach item in the sub array need to be checked*/
+function findSuspiciousScripts(scripts){
+    //console.log(scripts);
+    let flattenArray=scripts.flat(); /*Flat combines sub arrays into single array*/
+    console.log(flattenArray);
+}
+
 
 //this needs to check for the value of the sources based on the array of xss sources
 function detectSinks(sourceArray,sources){
@@ -159,6 +173,7 @@ function main(){
 
 }
 main();
+
 
 
 
