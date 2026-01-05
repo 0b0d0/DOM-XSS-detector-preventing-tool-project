@@ -13,6 +13,7 @@
     "active-tab",
     "tabs",
     "scripting",
+    "https://raw.githubusercontent.com/payloadbox/xss-payload-list/master/Intruder/xss-payload-list.txt",
     "https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt"
 
 ],
@@ -23,7 +24,7 @@
         "js":[
         "domDetector.js", 
         "popUp.js",
-        "domXSSpayloads.js"
+        "node_modules/dompurify/dist/purify.min.js"
       ]
     }
 ],
@@ -38,6 +39,10 @@
   "default_icon":"coin.png",
   "defualt-title":"Extension",
   "default_popup": "interface.html"
-}
+},
 
+"web_accessible_resources":[
+  "node_modules/dompurify/dist/purify.js",
+  "node_modules/dompurify/dist/purify.min.js"
+]
 }
