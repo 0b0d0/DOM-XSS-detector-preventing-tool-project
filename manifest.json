@@ -39,10 +39,6 @@
   "default_icon":"coin.png",
   "defualt-title":"Extension",
   "default_popup": "interface.html"
-},
-
-"web_accessible_resources":[
-  "node_modules/dompurify/dist/purify.js",
-  "node_modules/dompurify/dist/purify.min.js"
-]
 }
+}
+
