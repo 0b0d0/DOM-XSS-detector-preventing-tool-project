@@ -4,10 +4,8 @@ sinks=["alert","eval","fetch","document.cookie","document.write","prompt","attr"
     "location.href"
 ];
 
-/*regular expression for sinks to detect if a string is found 
-*/
-
-//using either one of them
+/*regular expression for sinks to detect if a string is found */
+//using BOTH of them
 const htmlCssTagsSinkRegex= new RegExp(
     `\\b(?:href|src|onclick|onload|onkeydown|onmousedown|onerror|ondrag|oncopy|onmouseover|onloadstart|style)\\s*=\\
     s*["']?([^"'>]*)\\b(?:${sinks.join("|")})\\s*\\([^)]*\\)[^"'>]*["']?`, 
@@ -21,7 +19,7 @@ const scriptTagsSinksRegex = new RegExp(
     `\\b(?:${sinks.join("|")})\\s*\\s*[^.;]+`,       // Any other usage forms
     'gi'  // Flags: g (global), i (case-insensitive)
 );
-//AN IMPROVED sinksRegex will test later
+
 
 const plainHtmlSources=["href","src","onclick", "onload","onkeydown","onmousedown","onerror",
     "ondrag","oncopy","onmouseoever","onloadstart"];
@@ -102,18 +100,31 @@ console.log("CSS sources",cssElements);*/
 /*trying tp get script tag becuase this is a hard source to check */
 function detectContentFromScriptElement(){
     const scriptTags=document.querySelectorAll("script");
-    
+    let x=0;
     scriptTags.forEach((script)=>{//check if script content is null and see if it matches regular expressions
         //text context contains the syntax inside the script tags etc <script>console.log("bye")</script>
-        
-        if(script.textContent!==null){
-            if(scriptTagsSinksRegex.test(script.textContent)){
+        x++;
+        if(script.textContent!==""){ /*check for empty string*/
+            
+            /*if(scriptTagsSinksRegex.test(script.textContent)){
                 console.log("Payload found at",script.textContent);
                 //encoding is done to prevent the dom payload from executing
                 console.log("Script tag text content after being encoded", 
                 btoa(String.fromCharCode(...new TextEncoder().encode(script.textContent)))); 
 
-            }
+            }*/
+          
+
+            
+            const matches=scriptTagsSinksRegex.exec(script.textContent); /*For scrip tag*/
+            
+            if(matches){
+                console.log("Payload found at",matches[0],"\n");
+                //encoding is done to prevent the dom payload from executing
+                console.log("Script tag text content after being encoded", 
+                btoa(String.fromCharCode(...new TextEncoder().encode(matches[0]))),"\n"); 
+        }
+
         }
     })
    
@@ -122,7 +133,6 @@ function detectContentFromScriptElement(){
 
 //this needs to check for the value of the sources based on the array of xss sources
 function detectSinks(sourceArray,sources){
-   
     for(k=0;k<sourceArray.length;k++){
         //console.log("Element",k,sourceArray[k]);
        try{
@@ -134,37 +144,9 @@ function detectSinks(sourceArray,sources){
                     /*encoding is done to prevent the dom payload from executing and
                     changing the original sourceArray value*/
                     console.log("Element tag attribute after being encoded",btoa(sourceArray[k]));
-            } 
-
-            //}
-           
+            }            
         }catch(error){
                 console.error("Could not process",sourceArray[k],"Error: ",error);
             }
     }   
 }
-
-/*Would like to call main function every x minutes */
-
-/*Where main program starts */
-function main(){
-    
-    /*console.log("CSS ELEMENTS");
-    detectSinks(cssElements,plainCssSources);
-    console.log("HTML ELEMENTS")
-    detectSinks(htmlElements,plainHtmlSources);
-    console.log("JAVASCRIPT ELEMENTS");
-    detectContentFromScriptElement();*/
-
-     console.log("Html sources",htmlElements);
-
-    //console.log("CSS sources",cssElements);
-
-}
-main();
-
-//calls function every x seconds
-//setInterval(main,60*1000);
-
-
-
