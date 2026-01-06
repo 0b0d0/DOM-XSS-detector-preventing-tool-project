@@ -150,3 +150,21 @@ function detectSinks(sourceArray,sources){
             }
     }   
 }
+
+/*Where main program starts */
+function main(){
+    
+    /*console.log("CSS ELEMENTS");
+    detectSinks(cssElements,plainCssSources);
+    console.log("HTML ELEMENTS")
+    detectSinks(htmlElements,plainHtmlSources);
+    console.log("JAVASCRIPT ELEMENTS");
+    detectContentFromScriptElement();*/
+
+     //console.log("Html sources",htmlElements);
+     console.log("JAVASCRIPT ELEMENTS");
+    detectContentFromScriptElement();
+
+    //console.log("CSS sources",cssElements);
+
+}
