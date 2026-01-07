@@ -151,6 +151,32 @@ function detectSinks(sourceArray,sources){
     }   
 }
 
+/*Want to add DOM observer for real time detection*/
+function observeWebpage(){ //this function works
+    const bodyObserver = new MutationObserver((mutations) => { //intialise mutation object
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'childList' || mutation.type === 'attributes'
+                || mutation.type==='subtree' ||mutation.type==='characterData') {
+                //if true function triggers
+                console.log("Changes detected in <body>");
+            }
+            console.log("CSS ELEMENTS");
+            detectSinks(cssElements,plainCssSources);
+            console.log("HTML ELEMENTS")
+            detectSinks(htmlElements,plainHtmlSources);
+            console.log("JAVASCRIPT ELEMENTS");
+            detectContentFromScriptElement();
+        });
+    });
+
+    bodyObserver.observe(document.documentElement, { /*documentElement allows it scan every thing in the HTML*/
+        childList: true, //watch children
+        attributes: true, //watch for attribute changes
+        subtree: true, // Observe all descendants of the <body>
+        characterData: true //watch for changes in character data
+    });
+}
+
 /*Where main program starts */
 function main(){
     console.log("CSS ELEMENTS");
@@ -160,4 +186,5 @@ function main(){
     console.log("JAVASCRIPT ELEMENTS");
     detectContentFromScriptElement();
 }
+
 
