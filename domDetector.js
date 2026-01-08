@@ -4,28 +4,6 @@ sinks=["alert","eval","fetch","document.cookie","document.write","prompt","attr"
     "location.href"
 ];
 
-/*regular expression for sinks to detect if a string is found */
-//using BOTH of them
-const htmlCssTagsSinkRegex= new RegExp(
-    `\\b(?:href|src|onclick|onload|onkeydown|onmousedown|onerror|ondrag|oncopy|onmouseover|onloadstart|style)\\s*=\\
-    s*["']?([^"'>]*)\\b(?:${sinks.join("|")})\\s*\\([^)]*\\)[^"'>]*["']?`, 
-    'gi'  // Flags: g (global), i (case-insensitive)
-);
-const scriptTagsSinksRegex = new RegExp(
-    `\\b(?:${sinks.join("|")})\\s*\\([^()]*\\)|` +  // Function calls
-    `\\b(?:${sinks.join("|")})\\s*=[^;]*|` +        // Assignments
-    `\\b(?:${sinks.join("|")})\\s*\\([^)]*[^()]*\\)|` + // Nested function calls
-    `\\b(?:${sinks.join("|")})\\s*\\+\\s*["']|` +   // String concatenation
-    `\\b(?:${sinks.join("|")})\\s*\\s*[^.;]+`,       // Any other usage forms
-    'gi'  // Flags: g (global), i (case-insensitive)
-);
-
-
-const plainHtmlSources=["href","src","onclick", "onload","onkeydown","onmousedown","onerror",
-    "ondrag","oncopy","onmouseoever","onloadstart"];
-const plainCssSources=["style"
-];
-
 /*Sources wehre the attack occurs by placing the sink in the source
 [""] allows it look for each element that uses the source
 and it applies to jquery style selectors*/
@@ -40,6 +18,31 @@ const cssSources = [
     "[style]"             
 ];
 
+/*regular expression for sinks to detect if a string is found */
+//using BOTH of them
+
+const htmlCssTagsSinkRegex = new RegExp(
+    `\\b(?:${htmlSources.join("|")})\\s*=\\s*['"]?(.*?)(?=[\\s"'/>])|` + 
+    `\\b(?:${sinks.join("|")})\\s*\\([^)]*\\)`, 
+    'gi'
+);
+
+
+const scriptTagsSinksRegex = new RegExp(
+    `\\b(?:${sinks.join("|")})\\s*\\(` +                                  
+    `([^()]*|\\([^()]*\\)|'[^']*'|"[^"]*")\\)|` +                       
+    `\\b(?:${sinks.join("|")})\\s*=\\s*([^;]*?)(?:;|$)|` +              
+    `\\b(?:${sinks.join("|")})\\s*\\+\\s*(['"])(.*?)(?:\\1|$)|` +      
+    `\\b(?:${sinks.join("|")})\\s*\\+\\s*([^\\s;]+)` +                 
+    `(?=[;\n]|$)`,                                                       
+    'gi'   
+);
+
+
+const plainHtmlSources=["href","src","onclick", "onload","onkeydown","onmousedown","onerror",
+    "ondrag","oncopy","onmouseoever","onloadstart"];
+const plainCssSources=["style"
+];
 
 /*functions   */
 
@@ -186,5 +189,6 @@ function main(){
     console.log("JAVASCRIPT ELEMENTS");
     detectContentFromScriptElement();
 }
+
 
 
