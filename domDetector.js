@@ -188,7 +188,11 @@ function main(){
     detectSinks(htmlElements,plainHtmlSources);
     console.log("JAVASCRIPT ELEMENTS");
     detectContentFromScriptElement();
+    observeWebpage(); 
 }
+
+main();
+
 
 
 
