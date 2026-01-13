@@ -1,5 +1,5 @@
 /*sinks */
-sinks=["alert","eval","fetch","document.cookie","document.write","prompt","attr",
+const sinks=["alert","eval","fetch","document.cookie","document.write","prompt","attr",
     "document.location","innerHTML,outerHTML","setAttribute","insertAdjacementHTML",
     "location.href"
 ];
@@ -20,13 +20,14 @@ const cssSources = [
 
 /*regular expression for sinks to detect if a string is found */
 //using BOTH of them
+// Build the regex for sinks  
+const sinkPattern = sinks.map(sink => sink.replace(/([.*+?^${}()|[\]\\])/g, '\\$1')).join("|"); // Escape special characters
 
-const htmlCssTagsSinkRegex = new RegExp(
-    `\\b(?:${htmlSources.join("|")})\\s*=\\s*['"]?(.*?)(?=[\\s"'/>])|` + 
-    `\\b(?:${sinks.join("|")})\\s*\\([^)]*\\)`, 
-    'gi'
+// Consolidated regex for detecting XSS payloads with and without attribute names
+const htmlRegexPattern = new RegExp(
+    `(?:\\b(?:[a-zA-Z-]+)\\s*=\\s*)?["']?\\s*(?:(javascript|vbscript|data|file|livescript|about|blob|ftp):[^"'>]+|[^"'>]*)?[^"'>]*(${sinkPattern})`, 
+    'i'
 );
-
 
 const scriptTagsSinksRegex = new RegExp(
     `\\b(?:${sinks.join("|")})\\s*\\(` +                                  
@@ -137,21 +138,21 @@ function detectContentFromScriptElement(){
 //this needs to check for the value of the sources based on the array of xss sources
 function detectSinks(sourceArray,sources){
     for(k=0;k<sourceArray.length;k++){
-        //console.log("Element",k,sourceArray[k]);
-       try{
-            //const attributeValue=sourceArray[k].getAttribute(sources[a]);
-            //if(sourceArray[k]!==null){//is attribute value empty
-                if(htmlCssTagsSinkRegex.test(String(sourceArray[k]))){ 
+        for(a=0;a<sources.length;a++){
+            try{
+            const attributeValue=sourceArray[k].getAttribute(sources[a]);//originally was meant to loop through teh source values
+                if(htmlRegexPattern.test(attributeValue)){ 
                     //checking attribute value matches the pattern with the sinks regular expression 
-                    console.log("Found dom xss payload at",sourceArray[k]);
-                    /*encoding is done to prevent the dom payload from executing and
-                    changing the original sourceArray value*/
-                    console.log("Element tag attribute after being encoded",btoa(sourceArray[k]));
-            }            
+                    console.log("Found dom xss payload at",attributeValue);
+                    //encoding is done to prevent the dom payload from executing and changing the original sourceArray value
+                    console.log("Attribute value after being encoded",btoa(attributeValue),"\n");
+                    console.log("Element after attribute was encoded",sourceArray[k]);
+            }           
         }catch(error){
                 console.error("Could not process",sourceArray[k],"Error: ",error);
             }
-    }   
+        }
+}
 }
 
 /*Want to add DOM observer for real time detection*/
@@ -192,6 +193,7 @@ function main(){
 }
 
 main();
+
 
 
 
