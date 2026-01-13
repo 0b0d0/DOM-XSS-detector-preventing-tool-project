@@ -10,7 +10,7 @@
 
 "permissions":[ 
     "cookies",
-    "active-tab",
+    "activeTab",
     "tabs",
     "scripting",
     "https://raw.githubusercontent.com/payloadbox/xss-payload-list/master/Intruder/xss-payload-list.txt",
@@ -41,4 +41,5 @@
   "default_popup": "interface.html"
 }
 }
+
 
