@@ -13,8 +13,7 @@
     "activeTab",
     "tabs",
     "scripting",
-    "https://raw.githubusercontent.com/payloadbox/xss-payload-list/master/Intruder/xss-payload-list.txt",
-    "https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt"
+    "management"
 
 ],
 
@@ -22,12 +21,16 @@
     {
         "matches":["<all_urls>"],
         "js":[
-        "domDetector.js", 
-        "popUp.js",
-        "node_modules/dompurify/dist/purify.min.js"
+        "domDetector.js",
+        "popUp.js"
       ]
     }
 ],
+
+"background":{
+"scripts":["extensionSatusLogger.js"],
+"persistent": true
+},
 
 "browser_specific_settings": {
   "gecko": {
@@ -41,5 +44,3 @@
   "default_popup": "interface.html"
 }
 }
-
-
