@@ -28,7 +28,7 @@
 ],
 
 "background":{
-"scripts":["extensionSatusLogger.js"],
+"scripts":["extensionStatusLogger.js"],
 "persistent": true
 },
 
@@ -44,3 +44,4 @@
   "default_popup": "interface.html"
 }
 }
+
