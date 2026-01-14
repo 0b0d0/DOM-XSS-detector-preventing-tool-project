@@ -10,16 +10,16 @@ and it applies to jquery style selectors*/
 
 const htmlSources = [
     "[href]","[src]","[onclick]","[onload]","[onkeydown]","[onmousedown]","[onerror]",
-    "[ondrag]","[oncopy]","[onmouseover]","[onloadstart]"           
+    "[ondrag]","[oncopy]","[onmouseover]","[onloadstart]","[style]"           
 ];
 
-//css may not work so i will stick with html and javascript for now
-const cssSources = [
-    "[style]"             
-];
+const plainHtmlSources=["href","src","onclick", "onload","onkeydown","onmousedown","onerror",
+    "ondrag","oncopy","onmouseoever","onloadstart","style"];
+
 
 /*regular expression for sinks to detect if a string is found */
 //using BOTH of them
+
 // Build the regex for sinks  
 const sinkPattern = sinks.map(sink => sink.replace(/([.*+?^${}()|[\]\\])/g, '\\$1')).join("|"); // Escape special characters
 
@@ -28,6 +28,7 @@ const htmlRegexPattern = new RegExp(
     `(?:\\b(?:[a-zA-Z-]+)\\s*=\\s*)?["']?\\s*(?:(javascript|vbscript|data|file|livescript|about|blob|ftp):[^"'>]+|[^"'>]*)?[^"'>]*(${sinkPattern})`, 
     'i'
 );
+
 
 const scriptTagsSinksRegex = new RegExp(
     `\\b(?:${sinks.join("|")})\\s*\\(` +                                  
@@ -40,16 +41,10 @@ const scriptTagsSinksRegex = new RegExp(
 );
 
 
-const plainHtmlSources=["href","src","onclick", "onload","onkeydown","onmousedown","onerror",
-    "ondrag","oncopy","onmouseoever","onloadstart"];
-const plainCssSources=["style"
-];
-
 /*functions   */
 
 //these only store one array with node lists i want to make each source have its own seperate array to compare
 const foundHtmlSources=[]; 
-const foundCssSources=[];
 
 /*this stores the sources as well as the elemnts that use them but that contains an array with many arrays inside the one array
 so i try it make easier to  manage
@@ -60,7 +55,7 @@ function searchForSources(sources,li){
     //getting all
     let allElements;
     for(x=0;x<sources.length;x++){
-        allElements=document.querySelectorAll("*"+sources[x])
+        allElements=document.querySelectorAll("*"+sources[x])/*stores elements that have use a certain source*/
         li.push(allElements);
     }
     return li //stores the values in the array that stores node lists
@@ -68,12 +63,9 @@ function searchForSources(sources,li){
 
 //These values store the elemets that use the sources but the elements are stored in seperate arrays
 let htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO stores the values in the array that stores node lists
-let cssHolder=searchForSources(cssSources,foundCssSources);
-
 
 //trying break down list into seperate list
 const seperateHtmlArray=[];
-const seperateCssArray=[];
 
 //this functions combines the sources for each categratory into one array
  function joinNodeLists(sourceHolder,container){
@@ -87,55 +79,45 @@ const seperateCssArray=[];
             //check if a node list is empty
             
             container.push(sourceHolder[z][y]);
-            
-
         }
     }
     return container;
 }
 //the elements are seperate arrays to be analysed and the function combines the node lists into one ARRAY
 let htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);
-let cssElements=joinNodeLists(cssHolder,seperateCssArray);
 
-/*
-console.log("Html sources",htmlElements);
-console.log("CSS sources",cssElements);*/
+/*console.log("Html sources",htmlElements);*/
+
 
 /*trying tp get script tag becuase this is a hard source to check */
 function detectContentFromScriptElement(){
     const scriptTags=document.querySelectorAll("script");
     let x=0;
-    scriptTags.forEach((script)=>{//check if script content is null and see if it matches regular expressions
+    try{
+        scriptTags.forEach((script)=>{//check if script content is null and see if it matches regular expressions
         //text context contains the syntax inside the script tags etc <script>console.log("bye")</script>
         x++;
         if(script.textContent!==""){ /*check for empty string*/
-            
-            /*if(scriptTagsSinksRegex.test(script.textContent)){
-                console.log("Payload found at",script.textContent);
-                //encoding is done to prevent the dom payload from executing
-                console.log("Script tag text content after being encoded", 
-                btoa(String.fromCharCode(...new TextEncoder().encode(script.textContent)))); 
-
-            }*/
-          
-
-            
-            const matches=scriptTagsSinksRegex.exec(script.textContent); /*For scrip tag*/
+            const matches=scriptTagsSinksRegex.test(script.textContent); /*For scrip tag*/
+            //.exec(script.textContent)
+            //matches[0]
             
             if(matches){
-                console.log("Payload found at",matches[0],"\n");
+                console.log("Payload found",matches,"\n"); //match is like test but it returns the part of the code that is suspicious
                 //encoding is done to prevent the dom payload from executing
-                console.log("Script tag text content after being encoded", 
-                btoa(String.fromCharCode(...new TextEncoder().encode(matches[0]))),"\n"); 
-        }
-
-        }
+                encodeNow=btoa(String.fromCharCode(...new TextEncoder().encode(script.textContent)));
+                script.textContent=encodeNow;
+                console.log("Script tag text content after being encoded", script.textContent,"\n");
+        }}
     })
-   
+    }catch(error){
+        console.log("Error occured",error);
+    } 
 }
 
 
 //this needs to check for the value of the sources based on the array of xss sources
+//loop through each element and checks the event id attribute value
 function detectSinks(sourceArray,sources){
     for(k=0;k<sourceArray.length;k++){
         for(a=0;a<sources.length;a++){
@@ -143,10 +125,13 @@ function detectSinks(sourceArray,sources){
             const attributeValue=sourceArray[k].getAttribute(sources[a]);//originally was meant to loop through teh source values
                 if(htmlRegexPattern.test(attributeValue)){ 
                     //checking attribute value matches the pattern with the sinks regular expression 
-                    console.log("Found dom xss payload at",attributeValue);
+                    console.log("Found dom xss payload at",attributeValue,"in",sourceArray[k]);
+                    const encodedValue=btoa(attributeValue);
+                    
                     //encoding is done to prevent the dom payload from executing and changing the original sourceArray value
-                    console.log("Attribute value after being encoded",btoa(attributeValue),"\n");
-                    console.log("Element after attribute was encoded",sourceArray[k]);
+                    //trying to set the new attribute value in the DOM   
+                    sourceArray[k].setAttribute(sources[a],encodedValue);
+                    console.log("Element after the attribute value was encoded",sourceArray[k]);
             }           
         }catch(error){
                 console.error("Could not process",sourceArray[k],"Error: ",error);
@@ -155,21 +140,17 @@ function detectSinks(sourceArray,sources){
 }
 }
 
-/*Want to add DOM observer for real time detection*/
+/*DOM observer allows the code to check for any changes in the web page source code*/
 function observeWebpage(){ //this function works
     const bodyObserver = new MutationObserver((mutations) => { //intialise mutation object
         mutations.forEach((mutation) => {
             if (mutation.type === 'childList' || mutation.type === 'attributes'
                 || mutation.type==='subtree' ||mutation.type==='characterData') {
                 //if true function triggers
-                console.log("Changes detected in <body>");
+                console.log("Changes detected in web page");
+                console.log("HTML & CSS sources",htmlElements,"\n");
+                    
             }
-            console.log("CSS ELEMENTS");
-            detectSinks(cssElements,plainCssSources);
-            console.log("HTML ELEMENTS")
-            detectSinks(htmlElements,plainHtmlSources);
-            console.log("JAVASCRIPT ELEMENTS");
-            detectContentFromScriptElement();
         });
     });
 
@@ -183,15 +164,16 @@ function observeWebpage(){ //this function works
 
 /*Where main program starts */
 function main(){
-    console.log("CSS ELEMENTS");
-    detectSinks(cssElements,plainCssSources);
-    console.log("HTML ELEMENTS")
+    
+    /*console.log("HTML WHERE XSS PAYLOADS HAVE BEEN FOUND")
     detectSinks(htmlElements,plainHtmlSources);
     console.log("JAVASCRIPT ELEMENTS");
-    detectContentFromScriptElement();
-    observeWebpage(); 
-}
+    detectContentFromScriptElement();*/
 
+    //console.log("HTML elements that use the attributes in the sources array",htmlHolder,"\n");
+    //set up observer to add real time detection
+    observeWebpage();
+}
 main();
 
 
