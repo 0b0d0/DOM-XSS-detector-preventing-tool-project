@@ -5,7 +5,7 @@
 "version":"1.0",
 
 "icons":{
-    "32": "coin.png"
+    "32": "images/coin.png"
 },
 
 "permissions":[ 
@@ -21,16 +21,11 @@
     {
         "matches":["<all_urls>"],
         "js":[
-        "domDetector.js",
-        "popUp.js"
+        "javascript/domDetector.js",
+        "javascript/popUp.js"
       ]
     }
 ],
-
-"background":{
-"scripts":["extensionStatusLogger.js"],
-"persistent": true
-},
 
 "browser_specific_settings": {
   "gecko": {
@@ -39,9 +34,8 @@
 },
 
 "browser_action": {
-  "default_icon":"coin.png",
+  "default_icon":"images/coin.png",
   "defualt-title":"Extension",
   "default_popup": "interface.html"
 }
 }
-
