@@ -13,7 +13,8 @@
     "activeTab",
     "tabs",
     "scripting",
-    "management"
+    "management",
+    "https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt"
 
 ],
 
@@ -22,7 +23,9 @@
         "matches":["<all_urls>"],
         "js":[
         "javascript/domDetector.js",
-        "javascript/popUp.js"
+        "javascript/popUp.js",
+        "javascript/ai_model.js",
+        "javascript/getDataSets.js"
       ]
     }
 ],
