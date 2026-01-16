@@ -14,7 +14,8 @@
     "tabs",
     "scripting",
     "management",
-    "https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt"
+    "https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt",
+    "storage"
 
 ],
 
@@ -22,10 +23,11 @@
     {
         "matches":["<all_urls>"],
         "js":[
+        "javascript/tensorflow.js",
         "javascript/domDetector.js",
         "javascript/popUp.js",
-        "javascript/ai_model.js",
-        "javascript/getDataSets.js"
+        "javascript/getDataSets.js",
+        "javascript/ai_model.js"
       ]
     }
 ],
@@ -42,3 +44,4 @@
   "default_popup": "interface.html"
 }
 }
+
