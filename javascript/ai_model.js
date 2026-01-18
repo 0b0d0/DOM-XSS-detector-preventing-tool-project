@@ -1,5 +1,11 @@
+//const module=require('./getDatasets.js');
+/*This file is not completed not everything is working
+it is meant to be used to used for detection and prevent for xss
+instead of using regular expression for detection and encoding for prevention*/
+
 arraysForData=['payloadDataset0'];
 function getStoredData(item){
+    //using the key
     const storedData = localStorage.getItem(item); // Retrieve the string
     if (storedData) {//if found
         const payloadDataSet = JSON.parse(storedData); // Parse the JSON string back to an array
@@ -22,12 +28,14 @@ function arrangeTrainingData(data){
         const length=payload.length; //example feature
         const isDangerous=  //logic to put payload in a category
         xs.push([length]);
-        ys.push(isDangerous ? 1:0);//assume 1 for dangerous 0 safe
+
+        //includes one hot encoding which converts data into numbers format
+        ys.push(isDangerous ? [1,0]:[0,1]);
     });
 
     return{
         xs: tf.tensor2d(xs), // Features tensor
-        ys: tf.tensor1d(ys, 'int32') // Labels tensor
+        ys: tf.tensor2d(ys) // Labels tensor
         //converts feature and label arrays to tensorFlow tensors
     };
 }
@@ -63,3 +71,7 @@ if(dataSetOne.length==0){
     console.log("Data found to train model");
     trainModel(dataSetOne);
 }
+
+window.dataSetOne=dataSetOne;
+// Call the function from another file
+test();
