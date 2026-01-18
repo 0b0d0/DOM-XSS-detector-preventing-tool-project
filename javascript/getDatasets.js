@@ -1,8 +1,9 @@
 /*this file fetches dom xss payloads
 using fetch command.*/
 
- const websiteLinks=["https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt"
-];
+ const websiteLinks=["https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt",
+    "https://github.com/yogsec/XSS-Payloads/blob/main/dom_based_xss_payloads.txt"
+];;
 
 
 async function getDataSet(url,num){
@@ -38,6 +39,15 @@ getDataSet(websiteLinks, 0).then(payloadDataSet => {
         console.log("Checking if i really imported this");
     }
 });
+getDataSet(websiteLinks, 1).then(payloadDataSet => {
+    if(payloadDataSet){
+    // store result in golbal variable
+    // Now it should have the data
+        //console.log(payloadDataSet);
+        console.log("Dataset been retrieved");
+    }
+});
+
 
 
 
