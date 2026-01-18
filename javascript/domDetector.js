@@ -90,7 +90,7 @@ let htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);
 
 
 /*trying tp get script tag becuase this is a hard source to check */
-function detectContentFromScriptElement(){
+function detectScriptsWithRegExp(){
     const scriptTags=document.querySelectorAll("script");
     let x=0;
     try{
@@ -118,7 +118,7 @@ function detectContentFromScriptElement(){
 
 //this needs to check for the value of the sources based on the array of xss sources
 //loop through each element and checks the event id attribute value
-function detectSinks(sourceArray,sources){
+function detectSinksWithRegExp(sourceArray,sources){
     for(k=0;k<sourceArray.length;k++){
         for(a=0;a<sources.length;a++){
             try{
@@ -166,15 +166,16 @@ function observeWebpage(){ //this function works
 function main(){
     
     /*console.log("HTML WHERE XSS PAYLOADS HAVE BEEN FOUND")
-    detectSinks(htmlElements,plainHtmlSources);
+    detectSinksWithRegExp(htmlElements,plainHtmlSources);
     console.log("JAVASCRIPT ELEMENTS");
-    detectContentFromScriptElement();*/
+    detectScriptsWithRegExp();*/
 
     //console.log("HTML elements that use the attributes in the sources array",htmlHolder,"\n");
     //set up observer to add real time detection
     observeWebpage();
 }
 main();
+
 
 
 
