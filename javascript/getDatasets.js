@@ -20,8 +20,14 @@ async function getDataSet(url,num){
 
         // Split the string into a list
         const payloadDataSet = data.split("\n").filter(Boolean); // Removes empty lines
+
+       //encode each item in the dataSet before sotring to localStorage
+        const encodedDataSet=payloadDataSet.map(payload=>
+            btoa(encodeURIComponent(payload))
+        );
+
         //storing payload in local storage
-        localStorage.setItem('payloadDataset'+num,JSON.stringify(payloadDataSet));
+        localStorage.setItem('payloadDataset'+num,JSON.stringify(encodedDataSet));
 
         return payloadDataSet;
 
@@ -47,6 +53,7 @@ getDataSet(websiteLinks, 1).then(payloadDataSet => {
         console.log("Dataset been retrieved");
     }
 });
+
 
 
 
