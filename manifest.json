@@ -28,7 +28,8 @@
         "javascript/domDetector.js",
         "javascript/popUp.js",
         "javascript/getDataSets.js",
-        "javascript/ai_model.js"
+        "javascript/ai_model.js",
+        "javascript/serverToStoreDataSets.js"
       ]
     }
 ],
@@ -45,5 +46,6 @@
   "default_popup": "interface.html"
 }
 }
+
 
 
