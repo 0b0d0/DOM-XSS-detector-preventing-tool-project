@@ -7,10 +7,16 @@ arraysForData=['payloadDataset0'];
 function getStoredData(item){
     //using the key
     const storedData = localStorage.getItem(item); // Retrieve the string
-    if (storedData) {//if found
+   if (storedData) {//if found
         const payloadDataSet = JSON.parse(storedData); // Parse the JSON string back to an array
-        //console.log("Retrieved Payload Dataset: ", payloadDataSet);
-        return payloadDataSet;
+        
+        //decode each element to string
+        const decodedDataset=payloadDataSet.map(encodedPayload=>
+            decodeURIComponent(atob(encodedPayload))
+        );
+        //console.log("Retrieved Payload Dataset");
+        //return payloadDataSet;
+        return decodedDataset
     } else {
         return [];
     }
@@ -75,3 +81,4 @@ if(dataSetOne.length==0){
 window.dataSetOne=dataSetOne;
 // Call the function from another file
 test();
+
