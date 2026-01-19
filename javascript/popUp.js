@@ -1,4 +1,6 @@
- /*This does not work*/
+ /*This should have worked but because
+ the extension is loaded as a temporary extension the maagement API
+ does not work*/
  document.addEventListener("DOMContentLoaded",function(){
         const b1 = document.getElementById("b1"); // ON button
         const b2 = document.getElementById("b2"); // OFF button
