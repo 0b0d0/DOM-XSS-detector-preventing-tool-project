@@ -15,7 +15,7 @@
     "scripting",
     "management",
     "https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt",
-    "https://github.com/yogsec/XSS-Payloads/blob/main/dom_based_xss_payloads.txt",
+     "https://raw.githubusercontent.com/yogsec/XSS-Payloads/main/dom_based_xss_payloads.txt",
     "storage"
 
 ],
@@ -46,6 +46,7 @@
   "default_popup": "interface.html"
 }
 }
+
 
 
 
