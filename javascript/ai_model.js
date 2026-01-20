@@ -14,21 +14,23 @@ const safePatterns = [//safe patterns for model know which patterns are good and
 ];
 
 const dangerousPatterns=/alert|eval|fetch|document\.cookie|document\.write|prompt|attr|document\.location|innerHTML|outerHTML|setAttribute|insertAdjacentHTML|location\.href/i;   //logic to put payload in a category
+
 arraysForData=['payloadDataset0','payloadDataset1'];
 function getStoredData(item){
     //using the key
     const storedData = localStorage.getItem(item); // Retrieve the string
-    if (storedData) {//if found
+    try{
+        if (storedData) {//if found
         const payloadDataSet = JSON.parse(storedData); // Parse the JSON string back to an array
         
         //decode each element to string
         const decodedDataset=payloadDataSet.map(encodedPayload=>
             decodeURIComponent(atob(encodedPayload))
         );
-        //console.log("Retrieved Payload Dataset");
-        //return payloadDataSet;
         return decodedDataset
-    } else {
+    }
+    }catch(error){
+        console.error("Error parsing data set");
         return [];
     }
 }
@@ -52,7 +54,7 @@ function arrangeTrainingData(data){
         xs.push([length]);
 
         //includes one hot encoding which converts data into numbers format
-        ys.push(isSafe ? [1, 0, 0] : isDangerous ? [0, 1, 0] : [0, 0, 1]); // [safe, dangerous, neutral]
+        ys.push(isSafe ? [1, 0, 0] : isDangerous ? [0, 1, 0] : [0, 0, 1]); // [safe, dangerous, neutral or unknown payload]
     });
 
     return{
@@ -92,44 +94,13 @@ function trainModel(dataSets){
     
 }
 
-
 dataSetArray=[dataSetOne, dataSetTwo];
 //passing datasets as a array into function parameter
 //to run each dataSet and store them to combine them later
 trainModel(dataSetArray);
 
-//Adding a function to deal with webGL and tensor not being available
-function resolveAvailablityIssue(dataSets){
-    //check if webGL is available
-    if(!tf.getBackend()==='webgl'){
-        console.error("WebGL may be disabled, enable it in browser settings");
-        //retry after some time
-        setTimeout(()=>resolveAvailablityIssue(dataSets),5000);//retry every 5 seconds 1000=1 second
-    }
 
-    let isDataValid=true;//verify validity of dataset
+//trying to combine the models
 
-    dataSets.forEach((data,index)=>{
-        const trainingData = arrangeTrainingData(data); // Retrieve training data for this dataset
-
-        // Check tensor shapes
-        if (trainingData.xs.shape[0] === 0 || trainingData.ys.shape[0] === 0) {
-            console.error("Dataset", index + 1," is empty or incorrectly shaped.");
-            isDataValid = false; // Mark as invalid
-        }
-    });
-
-    //redo if data is invalid
-    if (!isDataValid) {
-        setTimeout(() => resolveAvailablityIssue(dataSets), 5000); // Retry after 5 seconds 1000=1 second
-        
-    }
-    //if checks pass model is trained
-    trainModel(dataSets);
-}
-
-//start checking and training model
-//resolveAvailablityIssue(dataSetArray);
-
-
-
+// Call the function from another file
+test();
