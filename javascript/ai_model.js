@@ -92,7 +92,43 @@ function trainModel(dataSets){
     
 }
 
+
+dataSetArray=[dataSetOne, dataSetTwo];
 //passing datasets as a array into function parameter
 //to run each dataSet and store them to combine them later
-trainModel([dataSetOne, dataSetTwo]);
+//trainModel([dataSetOne, dataSetTwo]);
+
+//Adding a function to deal with webGL and tensor not being available
+function resolveAvailablityIssue(dataSets){
+    //check if webGL is available
+    if(!tf.getBackend()==='webgl'){
+        console.error("WebGL may be disabled, enable it in browser settings");
+        //retry after some time
+        setTimeout(()=>resolveAvailablityIssue(dataSets),5000);//retry every 5 seconds 1000=1 second
+    }
+
+    let isDataValid=true;//verify validity of dataset
+
+    dataSets.forEach((data,index)=>{
+        const trainingData = arrangeTrainingData(data); // Retrieve training data for this dataset
+
+        // Check tensor shapes
+        if (trainingData.xs.shape[0] === 0 || trainingData.ys.shape[0] === 0) {
+            console.error("Dataset", index + 1," is empty or incorrectly shaped.");
+            isDataValid = false; // Mark as invalid
+        }
+    });
+
+    //redo if data is invalid
+    if (!isDataValid) {
+        setTimeout(() => resolveAvailablityIssue(dataSets), 5000); // Retry after 5 seconds 1000=1 second
+        
+    }
+    //if checks pass model is trained
+    trainModel(dataSets);
+}
+
+//start checking and training model
+resolveAvailablityIssue(dataSetArray);
+
 
