@@ -15,7 +15,7 @@ const safePatterns = [//safe patterns for model know which patterns are good and
 
 const dangerousPatterns=/alert|eval|fetch|document\.cookie|document\.write|prompt|attr|document\.location|innerHTML|outerHTML|setAttribute|insertAdjacentHTML|location\.href/i;   //logic to put payload in a category
 
-arraysForData=['payloadDataset0','payloadDataset1'];
+arraysForData=['payloadDataset0','payloadDataset1','payloadDataset2'];
 function getStoredData(item){
     //using the key
     const storedData = localStorage.getItem(item); // Retrieve the string
@@ -35,8 +35,10 @@ function getStoredData(item){
     }
 }
 
+//calling the get datasets for each dataset
 const dataSetOne=getStoredData(arraysForData[0]);
-const dataSetTwo=getStoredData(arraysForData[1])
+const dataSetTwo=getStoredData(arraysForData[1]);
+const dataSetThree=getStoredData(arraysForData[2]);
 
 function arrangeTrainingData(data){
     //makes arrays and for each payload
@@ -94,7 +96,7 @@ function trainModel(dataSets){
     
 }
 
-dataSetArray=[dataSetOne, dataSetTwo];
+dataSetArray=[dataSetOne, dataSetTwo,dataSetThree];//add new dataSet if made
 //passing datasets as a array into function parameter
 //to run each dataSet and store them to combine them later
 trainModel(dataSetArray);
