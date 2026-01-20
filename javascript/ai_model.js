@@ -3,17 +3,55 @@ it is meant to be used to used for detection and prevent for xss
 instead of using regular expression only for detection and encoding only for prevention*/
 
 const safePatterns = [//safe patterns for model know which patterns are good and bad
-    /^<p>.*<\/p>$/,      // Safe paragraph tags
-    /^<div>.*<\/div>$/,  // Safe div tags
-    /^<span>.*<\/span>$/, // Safe span tags
-    /^<strong>.*<\/strong>$/, // Safe strong tags
-    /^<em>.*<\/em>$/,    // Safe em tags
-    /^\w+$/,            // Alphanumeric input
-    /^(hello|world|example)$/i, // Common benign strings
-    /&lt;.*&gt;/       // HTML-escaped characters
+   // Safe paragraphs without nested tags
+    /^<p>(?:[^<]*|<br\s*\/?>)*<\/p>$/,                          
+
+    // Safe divs without nested tags
+    /^<div>(?:[^<]*|<br\s*\/?>)*<\/div>$/,                      
+
+    // Safe spans without nested tags
+    /^<span>(?:[^<]*|<br\s*\/?>)*<\/span>$/,                    
+
+    // Safe strong, em tags
+    /^<strong>(?:[^<]*|<br\s*\/?>)*<\/strong>$/,                 
+    /^<em>(?:[^<]*|<br\s*\/?>)*<\/em>$/,                         
+
+    // Alphanumeric input (for text inputs)
+    /^[a-zA-Z0-9\s]+$/,                                        
+
+    // Specific benign strings
+    /^(hello|world|example|test)$/i,                            
+
+    // HTML-escaped characters
+    /^&lt;[^&]*&gt;$/,                                         
+
+    // Valid <a> tags with safe hrefs
+    /^<a\s+href="(https?:\/\/[^\s"']+)"[^>]*>([^<]*)<\/a>$/,   
+
+    // Valid <img> tags with safe src and alt attributes
+    /^<img\s+src="(https?:\/\/[^\s"']+)"\s+alt="[^"]*"\s*\/?>$/, 
+
+    // Safe unordered and ordered lists
+    /^<ul>(<li>(?:[^<]*|<br\s*\/?>)*<\/li>)+<\/ul>$/,         
+    /^<ol>(<li>(?:[^<]*|<br\s*\/?>)*<\/li>)+<\/ol>$/,         
+
+    // Safe blockquotes
+    /^<blockquote>(?:[^<]*|<br\s*\/?>)*<\/blockquote>$/,        
+
+    // HTML comments
+    /^<!--(?:[^-]|-\s?)*-->$/,  
 ];
 
-const dangerousPatterns=/alert|eval|fetch|document\.cookie|document\.write|prompt|attr|document\.location|innerHTML|outerHTML|setAttribute|insertAdjacentHTML|location\.href/i;   //logic to put payload in a category
+const dangerousPatterns = /(?:alert|eval\(|fetch\(|document\.cookie|document\.write|prompt\(|eval|window\.location|innerHTML|outerHTML|setAttribute|insertAdjacentHTML|location\.href|javascript:|data:|vbscript:|on(blur|change|click|dblclick|error|focus|keydown|keypress|keyup|load|mousedown|mousemove|mouseout|mouseover|mouseup|resize|scroll|submit|unload|wheel|pointermove|pointerover)=)/i;
+
+//Adding extra context-aware checks for potential malicious patterns
+const obfuscatedDangerousPatterns = new RegExp(
+    `(?:` +
+    `(?:%3C|<)(?:.*?)(?:%3E|>)(?:.*?)(?:(?:document|window|eval|alert|write|cookie|location|innerHTML).*)` +
+    `|(?:javascript:|data:|vbscript:)(?:.*?)(?:<script(?:.*?)(?:<\/script>)?)` +
+    `|(?:<[^>]*?on[a-z]+=[^>]*?)` +
+    `)`, 'i'
+);
 
 arraysForData=['payloadDataset0','payloadDataset1','payloadDataset2'];
 function getStoredData(item){
@@ -55,7 +93,8 @@ function arrangeTrainingData(data){
         const isSafe=safePatterns.some(pattern=>
         typeof pattern==='string' ? payload.includes(pattern): // checks for strings and regular expressions
     pattern.test(payload));
-        const isDangerous=!isSafe && dangerousPatterns.test(payload);//see if it matches any dangerous pattern
+        const isDangerous=!isSafe && (dangerousPatterns.test(payload) ||
+    obfuscatedDangerousPatterns.test(payload));//see if it matches the dangerous or obfuscated patterns
         xs.push([length]);
 
         //includes one hot encoding which converts data into numbers format
@@ -99,7 +138,6 @@ function trainModel(dataSets){
     
 }
 
-dataSetArray=[dataSetOne, dataSetTwo,dataSetThree];//add new dataSet if made
 //passing datasets as a array into function parameter
 //to run each dataSet and store them to combine them later
 trainModel(dataSets);
@@ -109,4 +147,3 @@ trainModel(dataSets);
 
 // Call the function from another file
 test();
-
