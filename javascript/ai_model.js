@@ -35,10 +35,13 @@ function getStoredData(item){
     }
 }
 
-//calling the get datasets for each dataset
-const dataSetOne=getStoredData(arraysForData[0]);
-const dataSetTwo=getStoredData(arraysForData[1]);
-const dataSetThree=getStoredData(arraysForData[2]);
+//making an array to make this easier to maintain
+let dataSets=[];
+//go through each  array for data
+arraysForData.forEach((data)=>{
+    const dataset=getStoredData(data);
+    dataSets.push(dataset); //add each dataset to the array to be used to train each model
+});
 
 function arrangeTrainingData(data){
     //makes arrays and for each payload
@@ -99,10 +102,11 @@ function trainModel(dataSets){
 dataSetArray=[dataSetOne, dataSetTwo,dataSetThree];//add new dataSet if made
 //passing datasets as a array into function parameter
 //to run each dataSet and store them to combine them later
-trainModel(dataSetArray);
+trainModel(dataSets);
 
 
 //trying to combine the models
 
 // Call the function from another file
 test();
+
