@@ -70,7 +70,7 @@ function trainModel(dataSets){
     const model=tf.sequential();
     //adds 64 units(ReLU) layer and 2 units(softmax binary calssification) layer
     model.add(tf.layers.dense({ units: 64, activation: 'relu', inputShape: [1] }));
-    model.add(tf.layers.dense({ units: 2, activation: 'softmax' }));
+    model.add(tf.layers.dense({ units: 3, activation: 'softmax' }));
     //comiples it with adam
 
     model.compile({ optimizer: 'adam', loss: 'categoricalCrossentropy', metrics: ['accuracy'] });
@@ -96,7 +96,7 @@ function trainModel(dataSets){
 dataSetArray=[dataSetOne, dataSetTwo];
 //passing datasets as a array into function parameter
 //to run each dataSet and store them to combine them later
-//trainModel([dataSetOne, dataSetTwo]);
+trainModel(dataSetArray);
 
 //Adding a function to deal with webGL and tensor not being available
 function resolveAvailablityIssue(dataSets){
@@ -129,6 +129,7 @@ function resolveAvailablityIssue(dataSets){
 }
 
 //start checking and training model
-resolveAvailablityIssue(dataSetArray);
+//resolveAvailablityIssue(dataSetArray);
+
 
 
