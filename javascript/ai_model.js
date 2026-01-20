@@ -52,7 +52,7 @@ function arrangeTrainingData(data){
         xs.push([length]);
 
         //includes one hot encoding which converts data into numbers format
-        ys.push(isDangerous ? [1,0]:[0,1]);
+        ys.push(isSafe ? [1, 0, 0] : isDangerous ? [0, 1, 0] : [0, 0, 1]); // [safe, dangerous, neutral]
     });
 
     return{
@@ -95,3 +95,4 @@ function trainModel(dataSets){
 //passing datasets as a array into function parameter
 //to run each dataSet and store them to combine them later
 trainModel([dataSetOne, dataSetTwo]);
+
