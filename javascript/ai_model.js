@@ -41,6 +41,7 @@ const obfuscatedDangerousPatterns = new RegExp(
     `|(?:<[^>]*?on[a-z]+=[^>]*?)` +
     `)`, 'i'
 );
+const inputPayload=['<sVg><scRipt %00>alert&lpar;1&rpar; {Opera}'];
 
 arraysForData=['payloadDataset0','payloadDataset1','payloadDataset2'];
 function getStoredData(item){
@@ -97,13 +98,15 @@ function arrangeTrainingData(data){
     };
 }
 
-//global models array
-let models=[];
+//global models array to store models to use for predition combination
+let models=[]; //does  not handle asynchronous training
 
-async function trainModel(dataSets){
+async function trainModel(dataSets){ //async returns a promise
     let completeCounter=0;//checks if training for each model is done
+    const trainedPromises=[];//holds asynchronus training promises
     //for each calls a function for each item in array
     dataSets.forEach((data,index)=>{
+        //The trainng process
         const trainingData=arrangeTrainingData(data); //calls dataset to get formatted tensors
     //makes object for sequential model
     const model=tf.sequential();
@@ -111,35 +114,75 @@ async function trainModel(dataSets){
     model.add(tf.layers.dense({ units: 64, activation: 'relu', inputShape: [1] }));
     model.add(tf.layers.dense({ units: 3, activation: 'softmax' }));
     //comiples it with adam
-
     model.compile({ optimizer: 'adam', loss: 'categoricalCrossentropy', metrics: ['accuracy'] });
     
-    model.fit(trainingData.xs,trainingData.ys,{
+    //this is the asynchronus part of the model
+    const trainedPromise=model.fit(trainingData.xs,trainingData.ys,{
         epochs: 50,
         callbacks: {
             onEpochEnd: function(epoch, logs) {
                 console.log("Epoch: " + epoch + ", Loss: " + logs.loss + ", Accuracy: " + logs.acc);
             }
         }
-    }).then(() => {
+    }).then(() => { //executed after each promise is resolved
         console.log("Model training complete for the model",index+1);
         //push models into models array
-        models.push(model);
+        models.push(model); 
         completeCounter++;//add counter by 1
 
         if(completeCounter===dataSets.length){
-            console.log("ALL MODELS TRAINED ");
+            console.log("ALL MODELS TRAINED, READY TO COMBINE ");
         }
     }).catch(error => {
         console.error("Error during training:", error);
     });
-
+    trainedPromises.push(trainedPromise);
     });
+    // Wait for all training promises to complete
+    await Promise.all(trainedPromises);
 }
 
 //passing datasets as a array into function parameter
 //to run each dataSet and store them to combine them later
-trainModel(dataSets);
+//trainModel(dataSets);
+
+
+
+//when model has been trained
+
+// Train models and wait for completion, before running predictions
+trainModel(dataSets)
+    .then(() => {
+        // Now that the models are trained, call the prediction function
+        return runPrediction(); // Call to run prediction after training
+    })
+    .then(() => {
+        console.log("Processing complete."); // Indicate processing is complete
+    })
+    .catch(error => {
+        console.error("Error during processing:", error); // Handle any errors
+    });
+
+async function processPayloads(inputPayload,models){
+    const inputDataTensors=inputPayload.map(payload=>
+    tf.tensor2d([[payload.length]]));//pass each payload as a 2d array
+
+    //iterate through each input tensor to combine predictions
+    for(const inputData of inputDataTensors){
+        const finalPrediction=await combineModels(models,inputData);//calls function which return value
+        console.log("Final prediction for payload: ",finalPrediction);
+        }
+}
+
+async function runPrediction(){
+    try {
+        await processPayloads(inputPayload,models);//calling the function value
+        console.log("Processing complete.");
+    } catch (error) {
+        console.error("Error during processing:", error); // Handle errors
+    }
+}    
+
 
 //trying to combine the models to get final predciton
 //prediction will be used to check if the input matches is safe, dangerous or neutral
@@ -154,10 +197,6 @@ async function combineModels(models,inputData){
     return combinedPrediction; 
 }
 
-combineModels(trainModel(dataSets),'<sVg><scRipt %00>alert&lpar;1&rpar; {Opera').then(finalPrediction=>{
-    console.log("Final prediction: ",finalPrediction);
-    //returns promise of final predcition
-});
 
 
 // Call the function from another file
