@@ -5,39 +5,28 @@ instead of using regular expression only for detection and encoding only for pre
 const safePatterns = [//safe patterns for model know which patterns are good and bad
    // Safe paragraphs without nested tags
     /^<p>(?:[^<]*|<br\s*\/?>)*<\/p>$/,                          
-
     // Safe divs without nested tags
     /^<div>(?:[^<]*|<br\s*\/?>)*<\/div>$/,                      
-
     // Safe spans without nested tags
     /^<span>(?:[^<]*|<br\s*\/?>)*<\/span>$/,                    
-
     // Safe strong, em tags
     /^<strong>(?:[^<]*|<br\s*\/?>)*<\/strong>$/,                 
     /^<em>(?:[^<]*|<br\s*\/?>)*<\/em>$/,                         
-
     // Alphanumeric input (for text inputs)
     /^[a-zA-Z0-9\s]+$/,                                        
-
     // Specific benign strings
     /^(hello|world|example|test)$/i,                            
-
     // HTML-escaped characters
     /^&lt;[^&]*&gt;$/,                                         
-
     // Valid <a> tags with safe hrefs
     /^<a\s+href="(https?:\/\/[^\s"']+)"[^>]*>([^<]*)<\/a>$/,   
-
     // Valid <img> tags with safe src and alt attributes
     /^<img\s+src="(https?:\/\/[^\s"']+)"\s+alt="[^"]*"\s*\/?>$/, 
-
     // Safe unordered and ordered lists
     /^<ul>(<li>(?:[^<]*|<br\s*\/?>)*<\/li>)+<\/ul>$/,         
     /^<ol>(<li>(?:[^<]*|<br\s*\/?>)*<\/li>)+<\/ol>$/,         
-
     // Safe blockquotes
     /^<blockquote>(?:[^<]*|<br\s*\/?>)*<\/blockquote>$/,        
-
     // HTML comments
     /^<!--(?:[^-]|-\s?)*-->$/,  
 ];
@@ -108,7 +97,11 @@ function arrangeTrainingData(data){
     };
 }
 
-function trainModel(dataSets){
+//global models array
+let models=[];
+
+async function trainModel(dataSets){
+    let completeCounter=0;//checks if training for each model is done
     //for each calls a function for each item in array
     dataSets.forEach((data,index)=>{
         const trainingData=arrangeTrainingData(data); //calls dataset to get formatted tensors
@@ -130,20 +123,42 @@ function trainModel(dataSets){
         }
     }).then(() => {
         console.log("Model training complete for the model",index+1);
+        //push models into models array
+        models.push(model);
+        completeCounter++;//add counter by 1
+
+        if(completeCounter===dataSets.length){
+            console.log("ALL MODELS TRAINED ");
+        }
     }).catch(error => {
         console.error("Error during training:", error);
     });
 
     });
-    
 }
 
 //passing datasets as a array into function parameter
 //to run each dataSet and store them to combine them later
 trainModel(dataSets);
 
+//trying to combine the models to get final predciton
+//prediction will be used to check if the input matches is safe, dangerous or neutral
+async function combineModels(models,inputData){
+    const predictions=await Promise.all(models.map(model=>
+    model.predict(inputData)));
 
-//trying to combine the models
+    //get average or combine models
+    const combinedPrediction=predictions.reduce((acc,curr)=> acc.add(curr),
+    tf.zeros(predictions[0].shape)).div(models.length);
+    
+    return combinedPrediction; 
+}
+
+combineModels(trainModel(dataSets),'<sVg><scRipt %00>alert&lpar;1&rpar; {Opera').then(finalPrediction=>{
+    console.log("Final prediction: ",finalPrediction);
+    //returns promise of final predcition
+});
+
 
 // Call the function from another file
 test();
