@@ -209,12 +209,15 @@ async function processPayloads(inputPayload,models){
         //assign a categroy based on prediction
         //finalprediction as the parameter
         const classfication=assignCategory(finalPrediction);
-        if((await classfication).label==="Dangerous"){ //awaits for promise then checks
+        //get original payload
+        const originalPayload=inputPayload[inputDataTensors.indexOf(inputData)];//get index of value
+
+        if(await classfication.label==="Dangerous"){ //awaits for promise then checks
             //display dangerous payload found
-            console.log("Dangerous payload found");
-        }else if((await classfication).label==="Safe"){//awaits promise then checks
-            console.log("Payload is safe");
-        }else if((await classfication).label==="Neutral or Unknown"){
+            console.log("Dangerous payload found",originalPayload);
+        }else if( await classfication.label==="Safe"){//awaits promise then checks
+            console.log("Payload is safe",originalPayload);
+        }else if(await classfication.label==="Neutral or Unknown",originalPayload){
             console.log("Cannot classify what this is");
         }
     }
@@ -223,7 +226,7 @@ async function processPayloads(inputPayload,models){
 
 async function runPrediction(){
     try {
-        await processPayloads(inputPayload,models);//waits for the function value
+        await processPayloads(arrayOfPayloads,models);//waits for the function value
         console.log("Processing complete.");
     } catch (error) {
         console.error("Error during processing:", error); // Handle errors
@@ -234,4 +237,5 @@ async function runPrediction(){
 
 // Call the function from another file
 test();
+
 
