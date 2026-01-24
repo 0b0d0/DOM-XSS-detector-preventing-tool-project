@@ -154,25 +154,21 @@ async function trainModel(dataSets){ //async returns a promise
 
 //passing datasets as a array into function parameter
 //to run each dataSet and store them to combine them later
-trainModel(dataSets);
 
+//trying to see if i can run function if model are not in storage
+async function checkAndTrainModels(dataSets) {
+    if (checkModelsInStorage()==false) {
+        console.log("No models found in local storage. Starting training models...");
+        await trainModel(dataSets); // Call the trainModel function with the datasets
+    } else {
+        console.log("All models are already trained and stored in local storage.");
+    }
+}
 
-
-//when model has been trained
-
-// Train models and wait for completion of all model training , before running predictions
-/*trainModel(dataSets)
-    .then(() => {//after training all models it calls a function
-        // Now that the models are trained, call the prediction function
-        return runPrediction(); // Call to run prediction after training
-    })
-    .then(() => {
-        console.log("Processing complete."); // Indicate processing is complete
-    })
-    .catch(error => {
-        console.error("Error during processing:", error); // Handle any errors
-    });*/
-
+function checkModelsInStorage(){
+    return arraysForModelInStorage.every(modelName=>localStorage.getItem(modelName));
+    //returns true of false if every model is in storage
+}
 
 
 //trying to combine the models to get final predciton
@@ -248,3 +244,4 @@ async function runPrediction(){
 
 // Call the function from another file
 test();
+
