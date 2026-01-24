@@ -1,5 +1,4 @@
-/*This file is not completed not everything is working
-it is meant to be used to used for detection and prevent for xss
+/*This file is to be used to used for detection afor xss
 instead of using regular expression only for detection and encoding only for prevention*/
 
 const safePatterns = [//safe patterns for model know which patterns are good and bad
@@ -42,8 +41,11 @@ const obfuscatedDangerousPatterns = new RegExp(
     `)`, 'i'
 );
 const inputPayload=['<sVg><scRipt %00>alert&lpar;1&rpar; {Opera}'];
+//making example array of payloads
+arrayOfPyalods=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%72t(1)>">X</a','<img src=xss onerror=alert(1)>'];
 
 arraysForData=['payloadDataset0','payloadDataset1','payloadDataset2'];
+arraysForModelInStorage=["model1","model2","model3"];
 function getStoredData(item){
     //using the key
     const storedData = localStorage.getItem(item); // Retrieve the string
@@ -73,7 +75,7 @@ arraysForData.forEach((data)=>{
 
 function arrangeTrainingData(data){
     //makes arrays and for each payload
-    //calculates the lrngth as a feature and classifies payload as safe or dangerous
+    //calculates the length as a feature and classifies payload as safe or dangerous
     const xs=[];//features
     const ys=[];//labels
     data.forEach(payload => {
@@ -98,6 +100,10 @@ function arrangeTrainingData(data){
     };
 }
 
+async function checkExistingModel(index){
+    
+}
+
 //global models array to store models to use for predition combination
 let models=[]; //does  not handle asynchronous training
 
@@ -105,18 +111,19 @@ async function trainModel(dataSets){ //async returns a promise
     let completeCounter=0;//checks if training for each model is done
     const trainedPromises=[];//holds asynchronus training promises
     //for each calls a function for each item in array
-    dataSets.forEach((data,index)=>{
+    dataSets.forEach((data,index)=>{ //data is datsets
         //The trainng process
         const trainingData=arrangeTrainingData(data); //calls dataset to get formatted tensors
     //makes object for sequential model
     const model=tf.sequential();
-    //adds 64 units(ReLU) layer and 2 units(softmax binary calssification) layer
+    //this builds a neural network
     model.add(tf.layers.dense({ units: 64, activation: 'relu', inputShape: [1] }));
     model.add(tf.layers.dense({ units: 3, activation: 'softmax' }));
-    //comiples it with adam
+    //comiples prepares neural network for training
     model.compile({ optimizer: 'adam', loss: 'categoricalCrossentropy', metrics: ['accuracy'] });
     
     //this is the asynchronus part of the model
+    //.fit function trains machine learning model on dataset
     const trainedPromise=model.fit(trainingData.xs,trainingData.ys,{
         epochs: 50,
         callbacks: {
@@ -124,11 +131,14 @@ async function trainModel(dataSets){ //async returns a promise
                 console.log("Epoch: " + epoch + ", Loss: " + logs.loss + ", Accuracy: " + logs.acc);
             }
         }
-    }).then(() => { //executed after each promise is resolved
+    }).then(() => { //uses the promise if it was successful
         console.log("Model training complete for the model",index+1);
         //push models into models array
         models.push(model); 
         completeCounter++;//add counter by 1
+
+        //storing model in local storage
+        localStorage.setItem('model'+(completeCounter),JSON.stringify(model));
 
         if(completeCounter===dataSets.length){
             console.log("ALL MODELS TRAINED, READY TO COMBINE ");
@@ -138,21 +148,21 @@ async function trainModel(dataSets){ //async returns a promise
     });
     trainedPromises.push(trainedPromise);
     });
-    // Wait for all training promises to complete
+    //Promise.all() method returns a single Promise from a list of promises, when all promises fulfill
     await Promise.all(trainedPromises);
 }
 
 //passing datasets as a array into function parameter
 //to run each dataSet and store them to combine them later
-//trainModel(dataSets);
+trainModel(dataSets);
 
 
 
 //when model has been trained
 
-// Train models and wait for completion, before running predictions
-trainModel(dataSets)
-    .then(() => {
+// Train models and wait for completion of all model training , before running predictions
+/*trainModel(dataSets)
+    .then(() => {//after training all models it calls a function
         // Now that the models are trained, call the prediction function
         return runPrediction(); // Call to run prediction after training
     })
@@ -161,10 +171,9 @@ trainModel(dataSets)
     })
     .catch(error => {
         console.error("Error during processing:", error); // Handle any errors
-    });
+    });*/
 
-//making example array of payloads
-arrayOfPyalods=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%72t(1)>">X</a'];
+
 
 //trying to combine the models to get final predciton
 //prediction will be used to check if the input matches is safe, dangerous or neutral
@@ -181,7 +190,7 @@ async function combineModels(models,inputData){
 }
 
 //function to assign category for final prediction
-async function assignCategory(prediction){
+function assignCategory(prediction){
     const values=prediction.dataSync();//;Get value of regular array
     //arrays with the 3 numbers are from the categroy assignmenets given in
     //arrange training data function
@@ -203,8 +212,8 @@ async function processPayloads(inputPayload,models){
 
     //iterate through each input that will be predicted
     for(const inputData of inputDataTensors){
-        const finalPrediction=await combineModels(models,inputData);//calls function which return value
-        console.log("Final prediction for payload: ",finalPrediction); //returns results from function
+        const finalPrediction=await combineModels(models,inputData);//calls function which return value and //returns results from function
+        //console.log("Final prediction for payload: ",finalPrediction); //may not need to log the object
 
         //assign a categroy based on prediction
         //finalprediction as the parameter
@@ -215,7 +224,7 @@ async function processPayloads(inputPayload,models){
         if(await classfication.label==="Dangerous"){ //awaits for promise then checks
             //display dangerous payload found
             console.log("Dangerous payload found",originalPayload);
-        }else if( await classfication.label==="Safe"){//awaits promise then checks
+        }else if(await classfication.label==="Safe"){//awaits promise then checks
             console.log("Payload is safe",originalPayload);
         }else if(await classfication.label==="Neutral or Unknown",originalPayload){
             console.log("Cannot classify what this is");
@@ -223,19 +232,19 @@ async function processPayloads(inputPayload,models){
     }
 }
 
+//making processpayloads function global
+window.processPayloads=processPayloads;
 
 async function runPrediction(){
     try {
-        await processPayloads(arrayOfPayloads,models);//waits for the function value
+        await processPayloads(arrayOfPyalods,models);//waits for the function value
         console.log("Processing complete.");
+        //console.log(processPayloads.label,"Trying to see diplsaying the label from processPyaloads function works\n");// this did not show the label
     } catch (error) {
         console.error("Error during processing:", error); // Handle errors
     }
 }    
 
 
-
 // Call the function from another file
 test();
-
-
