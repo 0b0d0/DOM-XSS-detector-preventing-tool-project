@@ -163,26 +163,8 @@ trainModel(dataSets)
         console.error("Error during processing:", error); // Handle any errors
     });
 
-async function processPayloads(inputPayload,models){
-    const inputDataTensors=inputPayload.map(payload=>
-    tf.tensor2d([[payload.length]]));//pass each payload as a 2d array
-
-    //iterate through each input tensor to combine predictions
-    for(const inputData of inputDataTensors){
-        const finalPrediction=await combineModels(models,inputData);//calls function which return value
-        console.log("Final prediction for payload: ",finalPrediction);
-        }
-}
-
-async function runPrediction(){
-    try {
-        await processPayloads(inputPayload,models);//calling the function value
-        console.log("Processing complete.");
-    } catch (error) {
-        console.error("Error during processing:", error); // Handle errors
-    }
-}    
-
+//making example array of payloads
+arrayOfPyalods=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%72t(1)>">X</a'];
 
 //trying to combine the models to get final predciton
 //prediction will be used to check if the input matches is safe, dangerous or neutral
@@ -190,14 +172,66 @@ async function combineModels(models,inputData){
     const predictions=await Promise.all(models.map(model=>
     model.predict(inputData)));
 
-    //get average or combine models
+    //get average or combine models makes a combinedprediction
     const combinedPrediction=predictions.reduce((acc,curr)=> acc.add(curr),
     tf.zeros(predictions[0].shape)).div(models.length);
+
     
-    return combinedPrediction; 
+    return combinedPrediction;// returns al the information about the object which stores information
 }
+
+//function to assign category for final prediction
+async function assignCategory(prediction){
+    const values=prediction.dataSync();//;Get value of regular array
+    //arrays with the 3 numbers are from the categroy assignmenets given in
+    //arrange training data function
+    //check which values have the highest value
+    if(values[0]>values[1]&& values[0]>values[2]){
+        return { category: [1, 0, 0], label: "Safe" }; //is safe category
+    } else if(values[1]>values[0] && values[1]>values[2]){
+        return { category: [0, 1, 0], label: "Dangerous" }; //Dangerous category
+    } else if(values[2]>values[0] && values[2]>values[1]){
+       return { category: [0, 0, 1], label: "Neutral or Unknown" }; // neutral or unkown category
+    } else{
+        return { category: [0.5, 0.5, 0], label: "Ambiguous Result" }; //Unclear
+    }
+}
+
+async function processPayloads(inputPayload,models){
+    const inputDataTensors=inputPayload.map(payload=>
+    tf.tensor2d([[payload.length]]));//pass each payload as a 2d array
+
+    //iterate through each input that will be predicted
+    for(const inputData of inputDataTensors){
+        const finalPrediction=await combineModels(models,inputData);//calls function which return value
+        console.log("Final prediction for payload: ",finalPrediction); //returns results from function
+
+        //assign a categroy based on prediction
+        //finalprediction as the parameter
+        const classfication=assignCategory(finalPrediction);
+        if((await classfication).label==="Dangerous"){ //awaits for promise then checks
+            //display dangerous payload found
+            console.log("Dangerous payload found");
+        }else if((await classfication).label==="Safe"){//awaits promise then checks
+            console.log("Payload is safe");
+        }else if((await classfication).label==="Neutral or Unknown"){
+            console.log("Cannot classify what this is");
+        }
+    }
+}
+
+
+async function runPrediction(){
+    try {
+        await processPayloads(inputPayload,models);//waits for the function value
+        console.log("Processing complete.");
+    } catch (error) {
+        console.error("Error during processing:", error); // Handle errors
+    }
+}    
 
 
 
 // Call the function from another file
 test();
+
