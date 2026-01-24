@@ -42,7 +42,7 @@ const obfuscatedDangerousPatterns = new RegExp(
 );
 const inputPayload=['<sVg><scRipt %00>alert&lpar;1&rpar; {Opera}'];
 //making example array of payloads
-arrayOfPyalods=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%72t(1)>">X</a','<img src=xss onerror=alert(1)>'];
+arrayOfPayloads=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%72t(1)>">X</a','<img src=xss onerror=alert(1)>'];
 
 arraysForData=['payloadDataset0','payloadDataset1','payloadDataset2'];
 arraysForModelInStorage=["model1","model2","model3"];
@@ -233,7 +233,7 @@ window.processPayloads=processPayloads;
 
 async function runPrediction(){
     try {
-        await processPayloads(arrayOfPyalods,models);//waits for the function value
+        await processPayloads(arrayOfPayloads,models);//waits for the function value
         console.log("Processing complete.");
         //console.log(processPayloads.label,"Trying to see diplsaying the label from processPyaloads function works\n");// this did not show the label
     } catch (error) {
@@ -244,4 +244,5 @@ async function runPrediction(){
 
 // Call the function from another file
 test();
+
 
