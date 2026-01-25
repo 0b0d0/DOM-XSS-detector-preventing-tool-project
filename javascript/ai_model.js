@@ -46,7 +46,8 @@ arrayOfPayloads=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%
 
 arraysForData=['payloadDataset0','payloadDataset1','payloadDataset2'];
 arraysForModelInStorage=["model1","model2","model3"];
-function getStoredData(item){
+
+async function getStoredData(item){
     //using the key
     const storedData = localStorage.getItem(item); // Retrieve the string
     try{
@@ -60,18 +61,34 @@ function getStoredData(item){
         return decodedDataset
     }
     }catch(error){
-        console.error("Error parsing data set");
+        console.error("Error parsing data set");//if error is found
         return [];
     }
+} //this function returns the promise
+
+
+
+//trying to collect datasets
+async function collectDatasets(){
+    //set dataSets
+    let dataSets=[];
+    for(const data of arraysForData){ // data is each item in arraysForData
+        const dataset=await getStoredData(data);//for each item call the function and waits for decodedDataset to be returned
+        dataSets.push(dataset);
+    }
+    return dataSets;
+   
 }
 
-//making an array to make this easier to maintain
-let dataSets=[];
-//go through each  array for data
-arraysForData.forEach((data)=>{
-    const dataset=getStoredData(data);
-    dataSets.push(dataset); //add each dataset to the array to be used to train each model
-});
+
+//can only call await in a async function
+//making invoked experssion function to handle the call
+(async function(){
+    const dataSets=await collectDatasets();//calling async function
+    if(dataSets){//if true
+        console.log("Datasets have been collected");
+    }
+})();
 
 function arrangeTrainingData(data){
     //makes arrays and for each payload
@@ -100,9 +117,6 @@ function arrangeTrainingData(data){
     };
 }
 
-async function checkExistingModel(index){
-    
-}
 
 //global models array to store models to use for predition combination
 let models=[]; //does  not handle asynchronous training
@@ -136,10 +150,7 @@ async function trainModel(dataSets){ //async returns a promise
         //push models into models array
         models.push(model); 
         completeCounter++;//add counter by 1
-
-        //storing model in local storage
-        localStorage.setItem('model'+(completeCounter),JSON.stringify(model));
-
+        localStorage.setItem("model"+(completeCounter), JSON.stringify(model.toJSON()));
         if(completeCounter===dataSets.length){
             console.log("ALL MODELS TRAINED, READY TO COMBINE ");
         }
@@ -156,9 +167,15 @@ async function trainModel(dataSets){ //async returns a promise
 //to run each dataSet and store them to combine them later
 
 //trying to see if i can run function if model are not in storage
-async function checkAndTrainModels(dataSets) {
+async function checkAndTrainModels() {
+    let dataSets=await collectDatasets();// waits for all the datasets to be stored into one array and returns one array
     if (checkModelsInStorage()==false) {
         console.log("No models found in local storage. Starting training models...");
+        
+        if(dataSets.length===0){
+            console.error("There are no datasets that can be used for training");
+        }
+
         await trainModel(dataSets); // Call the trainModel function with the datasets
     } else {
         console.log("All models are already trained and stored in local storage.");
@@ -170,6 +187,23 @@ function checkModelsInStorage(){
     //returns true of false if every model is in storage
 }
 
+checkAndTrainModels(); //using that function
+//as parameter because is return the datasets that are stored
+//in the single array
+
+//when model has been trained
+// Train models and wait for completion of all model training , before running predictions
+/*trainModel(dataSets)
+    .then(() => {//after training all models it calls a function
+        // Now that the models are trained, call the prediction function
+        return runPrediction(); // Call to run prediction after training
+    })
+    .then(() => {
+        console.log("Processing complete."); // Indicate processing is complete
+    })
+    .catch(error => {
+        console.error("Error during processing:", error); // Handle any errors
+    });*/
 
 //trying to combine the models to get final predciton
 //prediction will be used to check if the input matches is safe, dangerous or neutral
@@ -232,6 +266,7 @@ async function processPayloads(inputPayload,models){
 window.processPayloads=processPayloads;
 
 async function runPrediction(){
+    //length of datasets is equal to length of models
     try {
         await processPayloads(arrayOfPayloads,models);//waits for the function value
         console.log("Processing complete.");
@@ -244,5 +279,3 @@ async function runPrediction(){
 
 // Call the function from another file
 test();
-
-
