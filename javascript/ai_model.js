@@ -1,5 +1,6 @@
 /*This file is to be used to used for detection afor xss
 instead of using regular expression only for detection and encoding only for prevention*/
+/*if a function is async has has an asynchronus nature without the async the logic cannot work */
 
 const safePatterns = [//safe patterns for model know which patterns are good and bad
    // Safe paragraphs without nested tags
@@ -44,7 +45,7 @@ const obfuscatedDangerousPatterns = new RegExp(
 arraysForData=['payloadDataset0','payloadDataset1','payloadDataset2'];
 arraysForModelInStorage=["model1","model2","model3"];
 
-async function getStoredData(item){
+function getStoredData(item){
     //using the key
     const storedData = localStorage.getItem(item); // Retrieve the string
     try{
@@ -63,29 +64,22 @@ async function getStoredData(item){
     }
 } //this function returns the promise
 
-
-
 //trying to collect datasets
-async function collectDatasets(){
+function collectDatasets(){
     //set dataSets
     let dataSets=[];
     for(const data of arraysForData){ // data is each item in arraysForData
-        const dataset=await getStoredData(data);//for each item call the function and waits for decodedDataset to be returned
+        const dataset=getStoredData(data);//for each item call the function and waits for decodedDataset to be returned
         dataSets.push(dataset);
     }
     return dataSets;
-   
+
 }
 
-
-//can only call await in a async function
-//making invoked experssion function to handle the call
-(async function(){
-    const dataSets=await collectDatasets();//calling async function
-    if(dataSets){//if true
+let dataSets=collectDatasets();//using  array returned in function
+if(dataSets){//if true
         console.log("Datasets have been collected");
     }
-})();
 
 function arrangeTrainingData(data){
     //makes arrays and for each payload
@@ -110,6 +104,7 @@ function arrangeTrainingData(data){
     return{
         xs: tf.tensor2d(xs), // Features tensor
         ys: tf.tensor2d(ys) // Labels tensor
+        
         //converts feature and label arrays to tensorFlow tensors
     };
 }
@@ -162,7 +157,7 @@ async function trainModel(dataSets){ //async returns a promise
 
 //trying to see if i can run function if model are not in storage
 async function checkAndTrainModels() {
-    let dataSets=await collectDatasets();// waits for all the datasets to be stored into one array and returns one array
+    //let dataSets=await collectDatasets();// waits for all the datasets to be stored into one array and returns one array
     if (checkModelsInStorage()==false) {
         console.log("No models found in local storage. Starting training models...");
         
@@ -185,7 +180,7 @@ checkAndTrainModels(); //using that function
 
 //trying to load models from storage
 // i know the length of the model array
-async function loadModels(){
+function loadModels(){
     //array to store models
     let models=[];
     for(z=1;z<4;z++){
@@ -197,7 +192,7 @@ async function loadModels(){
     try {
         const modelParse = JSON.parse(modelData);
             // Reconstructing the model from JSON data
-        const model = await tf.models.modelFromJSON(modelParse);
+        const model = tf.models.modelFromJSON(modelParse);
         models.push(model); // Add the model to the array
         } catch (error) {
         console.error("Error loading model", z);
@@ -244,8 +239,8 @@ function assignCategory(prediction){
     }
 }
 
-async function processPayloads(inputPayload,models){
-    const inputDataTensors=inputPayload.map(payload=>
+async function processPayloads(input,models){
+    const inputDataTensors=input.map(payload=>
     tf.tensor2d([[payload.length]]));//pass each payload as a 2d array
 
     //iterate through each input that will be predicted
@@ -279,7 +274,7 @@ async function runPrediction(){
     //console.log("Checking this function works",loadModels());
     //length of datasets is equal to length of models
     try {
-        let models = await loadModels(); // Await the model loading
+        let models = loadModels(); // loading models
         // Check if any models were loaded
         if (models.length === 0) {
             console.error("No valid models available.");
