@@ -45,11 +45,13 @@ const obfuscatedDangerousPatterns = new RegExp(
 arraysForData=['payloadDataset0','payloadDataset1','payloadDataset2'];
 arraysForModelInStorage=["model1","model2","model3"];
 
-function getStoredData(item){
+
+
+function getStoredData(item){ //if this is async it would wait for the promise of fetching all the data
     //using the key
     const storedData = localStorage.getItem(item); // Retrieve the string
     try{
-        if (storedData) {//if found
+        if (storedData) {//if found in storage
         const payloadDataSet = JSON.parse(storedData); // Parse the JSON string back to an array
         
         //decode each element to string
@@ -59,12 +61,12 @@ function getStoredData(item){
         return decodedDataset
     }
     }catch(error){
-        console.error("Error parsing data set");//if error is found
+        console.error("Error parsing data set",error);//if error is found
         return [];
     }
-} //this function returns the promise
+} 
 
-//trying to collect datasets
+
 function collectDatasets(){
     //set dataSets
     let dataSets=[];
@@ -75,11 +77,6 @@ function collectDatasets(){
     return dataSets;
 
 }
-
-let dataSets=collectDatasets();//using  array returned in function
-if(dataSets){//if true
-        console.log("Datasets have been collected");
-    }
 
 function arrangeTrainingData(data){
     //makes arrays and for each payload
@@ -157,6 +154,15 @@ async function trainModel(dataSets){ //async returns a promise
 
 //trying to see if i can run function if model are not in storage
 async function checkAndTrainModels() {
+    //wait for returned array which promise
+    let dataSets= collectDatasets();//using  array returned in function
+    if(dataSets){//if true
+        console.log("Datasets have been collected");
+        //console.log(dataSets); //was checking if data was really there
+    }else{
+        console.log("No datasets found");
+    }
+    
     //let dataSets=await collectDatasets();// waits for all the datasets to be stored into one array and returns one array
     if (checkModelsInStorage()==false) {
         console.log("No models found in local storage. Starting training models...");
@@ -180,7 +186,7 @@ checkAndTrainModels(); //using that function
 
 //trying to load models from storage
 // i know the length of the model array
-function loadModels(){
+async function loadModels(){
     //array to store models
     let models=[];
     for(z=1;z<4;z++){
@@ -192,7 +198,7 @@ function loadModels(){
     try {
         const modelParse = JSON.parse(modelData);
             // Reconstructing the model from JSON data
-        const model = tf.models.modelFromJSON(modelParse);
+        const model = await tf.models.modelFromJSON(modelParse); //wait for promise
         models.push(model); // Add the model to the array
         } catch (error) {
         console.error("Error loading model", z);
@@ -221,6 +227,7 @@ async function combineModels(models,inputData){//fetch data from local storage
     
     return combinedPrediction;// returns al the information about the object which stores information
 }
+
 
 //function to assign category for final prediction
 function assignCategory(prediction){
@@ -252,7 +259,7 @@ async function processPayloads(input,models){
         //finalprediction as the parameter
         const classfication=assignCategory(finalPrediction);
         //get original payload
-        const originalPayload=inputPayload[inputDataTensors.indexOf(inputData)];//get index of value
+        const originalPayload=input[inputDataTensors.indexOf(inputData)];//get index of value
 
         if(await classfication.label==="Dangerous"){ //awaits for promise then checks
             //display dangerous payload found
@@ -268,27 +275,23 @@ async function processPayloads(input,models){
 //making processpayloads function global
 window.processPayloads=processPayloads;
 
+//making example array of payloads
+arrayOfPayloads=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%72t(1)>">X</a','<img src=xss onerror=alert(1)>'];
 async function runPrediction(){
-    //making example array of payloads
-    arrayOfPayloads=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%72t(1)>">X</a','<img src=xss onerror=alert(1)>'];
     //console.log("Checking this function works",loadModels());
     //length of datasets is equal to length of models
     try {
-        let models = loadModels(); // loading models
-        // Check if any models were loaded
-        if (models.length === 0) {
-            console.error("No valid models available.");
-            return; // Exit if no models loaded
-        }
-        await processPayloads(arrayOfPayloads,models);//waits for the function value
-        console.log("Processing complete.");
+        // When models have been loaded display ...
+        loadModels().then(async models => {
+            await processPayloads(arrayOfPayloads,models);//waits for the function value
+            console.log("Processing complete.");
         //console.log(processPayloads.label,"Trying to see diplsaying the label from processPyaloads function works\n");// this did not show the label
+        });
     } catch (error) {
         console.error("Error during processing:", error); // Handle errors
     }
 }    
 runPrediction();
-
 
 // Call the function from another file
 test();
