@@ -10,64 +10,55 @@ using fetch command.*/
 async function getDataSet(url,num){//async makes function return a promise
     //trying to get data from website
     try{
+        let payloadDataSet;
         const response= await fetch(url[num]);
         //check if reponse is good
         if(!response.ok){
             throw new Error("HTTP error! status:", response.status);
         }
         
-        const data=await response.text();
-        console.log("Successfully fetched payload dataset from", url[num]);
-
-        // Split the string into a list
-        const payloadDataSet = data.split("\n").filter(Boolean); // Removes empty lines
         
-        //encode each item in the dataSet before sotring to localStorage
-        const encodedDataSet=payloadDataSet.map(payload=>
-            btoa(encodeURIComponent(payload))
-        );
-
+        const data=await response.text();//await for data fetched from website
+        console.log("Successfully fetched payload dataset from", url[num]);
+        
         //check if item already exists in storage
         const itemExists=localStorage.getItem('payloadDataset'+num);
+
         if(itemExists){
-            console.log("The dataset that was fetched is already in storage");
+            console.log("The dataset that was fetched is already in storage dataset number",num );
         }else{
+            // Split the string into a list
+            payloadDataSet = data.split("\n").filter(Boolean); // Removes empty lines
+            
+            // Encode each item in the dataSet before storing to localStorage
+            const encodedDataSet = payloadDataSet.map(item => btoa(encodeURIComponent(item)));
+
             //storing payload dataset in local storage
             localStorage.setItem('payloadDataset'+num,JSON.stringify(encodedDataSet));
         }
-        
+
         return payloadDataSet;
     }catch (error){
-        alert("Error fetching dom xss payload dataset: ",error);
+        console.error(error);
     }
 }
 
 //Calling the function to execute content inside function
 //This checks if the data has been fetched and if true displays it as been fetched
 //then function triggers event when a promise is (fulfilled or rejected) - syntax .then(fulfilled,rejected)
-getDataSet(websiteLinks, 0).then(payloadDataSet => {
-    if(payloadDataSet){
-    // store result in golbal variable
-    // Now it should have the data
-        console.log("Dataset been retrieved");
-    }
-});
-getDataSet(websiteLinks, 1).then(payloadDataSet => {
-    if(payloadDataSet){
-    // store result in golbal variable
-    // Now it should have the data
-        console.log("Dataset been retrieved");
-    }
-});
 
-getDataSet(websiteLinks, 2).then(payloadDataSet => {
-    if(payloadDataSet){
-    // store result in golbal variable
-    // Now it should have the data
-        console.log("Dataset been retrieved");
+async function fetchAllData(){// Made this easier to manage 
+    for(let a=0;a<3;a++){//added 3 cause i know the length of website links and websitlinks.length only gave dataset of first item
+        const payloadDataset= await getDataSet(websiteLinks,a);//await for promise which is data fetched from website
+        if (payloadDataset) {
+            console.log("Dataset", a, "has been retrieved.");
+        }
     }
-});
+}
 
+//making function global
+window.fetchAllData=fetchAllData;
+fetchAllData();
 
 //was was justing testing how to access global functions in another file
 function test(){
