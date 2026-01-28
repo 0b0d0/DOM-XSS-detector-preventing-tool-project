@@ -2,42 +2,30 @@
 instead of using regular expression only for detection and encoding only for prevention*/
 /*if a function is async has has an asynchronus nature without the async the logic cannot work */
 
-const safePatterns = [//safe patterns for model know which patterns are good and bad
-   // Safe paragraphs without nested tags
-    /^<p>(?:[^<]*|<br\s*\/?>)*<\/p>$/,                          
-    // Safe divs without nested tags
-    /^<div>(?:[^<]*|<br\s*\/?>)*<\/div>$/,                      
-    // Safe spans without nested tags
-    /^<span>(?:[^<]*|<br\s*\/?>)*<\/span>$/,                    
-    // Safe strong, em tags
-    /^<strong>(?:[^<]*|<br\s*\/?>)*<\/strong>$/,                 
-    /^<em>(?:[^<]*|<br\s*\/?>)*<\/em>$/,                         
-    // Alphanumeric input (for text inputs)
-    /^[a-zA-Z0-9\s]+$/,                                        
-    // Specific benign strings
-    /^(hello|world|example|test)$/i,                            
-    // HTML-escaped characters
-    /^&lt;[^&]*&gt;$/,                                         
-    // Valid <a> tags with safe hrefs
-    /^<a\s+href="(https?:\/\/[^\s"']+)"[^>]*>([^<]*)<\/a>$/,   
-    // Valid <img> tags with safe src and alt attributes
-    /^<img\s+src="(https?:\/\/[^\s"']+)"\s+alt="[^"]*"\s*\/?>$/, 
-    // Safe unordered and ordered lists
-    /^<ul>(<li>(?:[^<]*|<br\s*\/?>)*<\/li>)+<\/ul>$/,         
-    /^<ol>(<li>(?:[^<]*|<br\s*\/?>)*<\/li>)+<\/ol>$/,         
-    // Safe blockquotes
-    /^<blockquote>(?:[^<]*|<br\s*\/?>)*<\/blockquote>$/,        
-    // HTML comments
-    /^<!--(?:[^-]|-\s?)*-->$/,  
+const safePatterns = [
+    /^<p>(?:[^<]*|<br\s*\/?>)*<\/p>$/,
+    /^<div>(?:[^<]*|<br\s*\/?>)*<\/div>$/,
+    /^<span>(?:[^<]*|<br\s*\/?>)*<\/span>$/,
+    /^<strong>(?:[^<]*|<br\s*\/?>)*<\/strong>$/,
+    /^<em>(?:[^<]*|<br\s*\/?>)*<\/em>$/,
+    /^[a-zA-Z0-9\s]+$/, // Alphanumeric input (may remain as is)
+    /^(hello|world|example|test)$/i,
+    /^&lt;[^&]*&gt;$/,
+    /^<a\s+href="(https?:\/\/[^\s"']+)"[^>]*>([^<]*)<\/a>$/, // Ensure the href is clean
+    /^<img\s+src="(https?:\/\/[^\s"']+)"\s+alt="[^"]*"\s*\/?$/, // Ensure src and alt are clean
+    /^<ul>(<li>(?:[^<]*|<br\s*\/?>)*<\/li>)+<\/ul>$/,
+    /^<ol>(<li>(?:[^<]*|<br\s*\/?>)*<\/li>)+<\/ol>$/,
+    /^<blockquote>(?:[^<]*|<br\s*\/?>)*<\/blockquote>$/,
+    /^<!--(?:[^-]|-\s?)*-->$/
 ];
 
-const dangerousPatterns = /(?:alert|eval\(|fetch\(|document\.cookie|document\.write|prompt\(|eval|window\.location|innerHTML|outerHTML|setAttribute|insertAdjacentHTML|location\.href|javascript:|data:|vbscript:|on(blur|change|click|dblclick|error|focus|keydown|keypress|keyup|load|mousedown|mousemove|mouseout|mouseover|mouseup|resize|scroll|submit|unload|wheel|pointermove|pointerover)=)/i;
 
+const dangerousPatterns = /(?:\b(alert|eval|fetch|document\.cookie|document\.write|prompt|window\.location|innerHTML|outerHTML|setAttribute|insertAdjacentHTML|location\.href)\b|javascript:|data:|vbscript:|on\w+=)/i;
 //Adding extra context-aware checks for potential malicious patterns
 const obfuscatedDangerousPatterns = new RegExp(
     `(?:` +
-    `(?:%3C|<)(?:.*?)(?:%3E|>)(?:.*?)(?:(?:document|window|eval|alert|write|cookie|location|innerHTML).*)` +
-    `|(?:javascript:|data:|vbscript:)(?:.*?)(?:<script(?:.*?)(?:<\/script>)?)` +
+    `(?:%3C|<).*?(?:%3E|>).*?(?:(?:document|window|eval|alert|write|cookie|location|innerHTML).*)` +
+    `|(?:javascript:|data:|vbscript:).*?(?:<script(?:.*?)(?:<\\/script>)?)` +
     `|(?:<[^>]*?on[a-z]+=[^>]*?)` +
     `)`, 'i'
 );
@@ -166,14 +154,11 @@ async function checkAndTrainModels() {
     //let dataSets=await collectDatasets();// waits for all the datasets to be stored into one array and returns one array
     if (checkModelsInStorage()==false) {
         console.log("No models found in local storage. Starting training models...");
-        
-        if(dataSets.length===0){
-            console.error("There are no datasets that can be used for training");
-        }
-
         await trainModel(dataSets); // Call the trainModel function with the datasets
+        console.log("All models are now trained and stored in local storage.");
+        
     } else {
-        console.log("All models are already trained and stored in local storage.");
+         console.log("All models are already trained and stored in local storage.");
     }
 }
 
@@ -182,50 +167,60 @@ function checkModelsInStorage(){
     //returns true of false if every model is in storage
 }
 
-checkAndTrainModels(); //using that function
-
-//trying to load models from storage
+//trying to load models from storag//array to store models
+let models=[];
 // i know the length of the model array
 async function loadModels(){
-    //array to store models
-    let models=[];
-    for(z=1;z<4;z++){
+    //await fetchDataAndTrainModel();
+    if(models.length>0){
+        return "Models have already been added";
+    }else{
+        for(z=1;z<4;z++){
         const modelData=JSON.parse(localStorage.getItem("model"+z));
-    if(!modelData){
-        console.error("Model data is not valid:", modelName);
-    }
-    //if false
-    try {
-        const modelParse = JSON.parse(modelData);
+        if(!modelData){
+            console.error("Model data is not valid:", modelName);
+            }
+        //if false
+        try {
+            const modelParse = JSON.parse(modelData);
             // Reconstructing the model from JSON data
-        const model = await tf.models.modelFromJSON(modelParse); //wait for promise
-        models.push(model); // Add the model to the array
-        } catch (error) {
-        console.error("Error loading model", z);
+            const model = await tf.models.modelFromJSON(modelParse); //wait for promise
+            models.push(model); // Add the model to the array
+            } catch (error) {
+            console.error("Error loading model", z);
+            }
         }
+        //outside loop
+        z++;
+        return models
     }
-    //outside loop
-    z++;
-    return models
+    
 
 }
 
+//console.log("Checking for loaded model",loadModels());
 
 //trying to combine the models to get final predciton
 //prediction will be used to check if the input matches is safe, dangerous or neutral
+
 async function combineModels(models,inputData){//fetch data from local storage
-    // If models are passed, use them; otherwise, retrieve from local storage
-    const storedModels = models.length ? models : JSON.parse(localStorage.getItem('models')) || [];
+    // Ensure that models array is valid
+    if (!models || models.length === 0) {
+        throw new Error("No valid models available for prediction.");
+    }
 
-    const predictions=await Promise.all(storedModels.map(model=>
-    model.predict(inputData)));
+    // Get predictions from all models
+    const predictions = await Promise.all(models.map(model => model.predict(inputData)));
 
-    //get average or combine models makes a combinedprediction
-    const combinedPrediction=predictions.reduce((acc,curr)=> acc.add(curr),
-    tf.zeros(predictions[0].shape)).div(models.length);
+    // Ensure all predictions are valid and have the same shape
+    if (predictions.some(prediction => !prediction || prediction.shape.length !== 2)) {
+        throw new Error("One or more predictions are invalid.");
+    }
 
-    
-    return combinedPrediction;// returns al the information about the object which stores information
+    // Assuming all predictions share the same shape, calculate the average
+    const combinedPrediction = predictions.reduce((acc, curr) => acc.add(curr), tf.zeros(predictions[0].shape)).div(predictions.length);
+
+    return combinedPrediction; // Returns combined prediction
 }
 
 
@@ -261,12 +256,12 @@ async function processPayloads(input,models){
         //get original payload
         const originalPayload=input[inputDataTensors.indexOf(inputData)];//get index of value
 
-        if(await classfication.label==="Dangerous"){ //awaits for promise then checks
+        if(classfication.label==="Dangerous"){ //awaits for promise then checks
             //display dangerous payload found
             console.log("Dangerous payload found",originalPayload);
-        }else if(await classfication.label==="Safe"){//awaits promise then checks
+        }else if( classfication.label==="Safe"){//awaits promise then checks
             console.log("Payload is safe",originalPayload);
-        }else if(await classfication.label==="Neutral or Unknown",originalPayload){
+        }else if(classfication.label==="Neutral or Unknown",originalPayload){
             console.log("Cannot classify what this is",originalPayload);
         }
     }
@@ -275,23 +270,30 @@ async function processPayloads(input,models){
 //making processpayloads function global
 window.processPayloads=processPayloads;
 
+
 //making example array of payloads
-arrayOfPayloads=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%72t(1)>">X</a','<img src=xss onerror=alert(1)>'];
-async function runPrediction(){
+let arrayOfPayloads=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%72t(1)>">X</a','<img src=xss onerror=alert(1)>'];
+async function runPrediction(input){
     //console.log("Checking this function works",loadModels());
     //length of datasets is equal to length of models
     try {
-        // When models have been loaded display ...
-        loadModels().then(async models => {
-            await processPayloads(arrayOfPayloads,models);//waits for the function value
-            console.log("Processing complete.");
+        await window.fetchAllData(); // Using await for cleaner promise handling
+
+        await checkAndTrainModels(); // Wait for models to be trained
+
+        const models = await loadModels(); // Load models only once
+        console.log("Checking if this works", models);
+        
+        // Process payloads with the loaded models
+        await processPayloads(input, models);
+        console.log("Processing complete.");
         //console.log(processPayloads.label,"Trying to see diplsaying the label from processPyaloads function works\n");// this did not show the label
-        });
+    
     } catch (error) {
         console.error("Error during processing:", error); // Handle errors
     }
 }    
-runPrediction();
+runPrediction(arrayOfPayloads);
 
 // Call the function from another file
 test();
