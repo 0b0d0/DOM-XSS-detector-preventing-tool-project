@@ -259,6 +259,8 @@ async function processPayloads(input,models){
         if(classfication.label==="Dangerous"){ //awaits for promise then checks
             //display dangerous payload found
             console.log("Dangerous payload found",originalPayload);
+            window.prevention(originalPayload);
+
         }else if( classfication.label==="Safe"){//awaits promise then checks
             console.log("Payload is safe",originalPayload);
         }else if(classfication.label==="Neutral or Unknown",originalPayload){
@@ -266,6 +268,8 @@ async function processPayloads(input,models){
         }
     }
 }
+
+window.processPayloads=processPayloads; //making this global 
 
 //making example array of payloads
 let arrayOfPayloads=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%72t(1)>">X</a','<img src=xss onerror=alert(1)>'];
@@ -280,6 +284,7 @@ async function runPrediction(){
         await checkAndTrainModels(); // Wait for models to be trained
 
         const models = await loadModels(); // Load models only once
+        window.models=models; //making it global 
         //console.log("Checking if this works", models);
         
         // Process payloads with the loaded models
@@ -292,6 +297,6 @@ async function runPrediction(){
         console.error("Error during processing:", error); // Handle errors
     }
 }    
-//runPrediction();
+runPrediction();
 
 
