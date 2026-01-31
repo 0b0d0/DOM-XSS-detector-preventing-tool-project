@@ -1,313 +1,181 @@
-/*This file is to be used to used for detection afor xss
-instead of using regular expression only for detection and encoding only for prevention*/
-/*if a function is async has has an asynchronus nature without the async the logic cannot work */
-
-const safePatterns = [//safe patterns for model know which patterns are good and bad
-   // Safe paragraphs without nested tags
-    /^<p>(?:[^<]*|<br\s*\/?>)*<\/p>$/,                          
-    // Safe divs without nested tags
-    /^<div>(?:[^<]*|<br\s*\/?>)*<\/div>$/,                      
-    // Safe spans without nested tags
-    /^<span>(?:[^<]*|<br\s*\/?>)*<\/span>$/,                    
-    // Safe strong, em tags
-    /^<strong>(?:[^<]*|<br\s*\/?>)*<\/strong>$/,                 
-    /^<em>(?:[^<]*|<br\s*\/?>)*<\/em>$/,                         
-    // Alphanumeric input (for text inputs)
-    /^[a-zA-Z0-9\s]+$/,                                        
-    // Specific benign strings
-    /^(hello|world|example|test)$/i,                            
-    // HTML-escaped characters
-    /^&lt;[^&]*&gt;$/,                                         
-    // Valid <a> tags with safe hrefs
-    /^<a\s+href="(https?:\/\/[^\s"']+)"[^>]*>([^<]*)<\/a>$/,   
-    // Valid <img> tags with safe src and alt attributes
-    /^<img\s+src="(https?:\/\/[^\s"']+)"\s+alt="[^"]*"\s*\/?>$/, 
-    // Safe unordered and ordered lists
-    /^<ul>(<li>(?:[^<]*|<br\s*\/?>)*<\/li>)+<\/ul>$/,         
-    /^<ol>(<li>(?:[^<]*|<br\s*\/?>)*<\/li>)+<\/ol>$/,         
-    // Safe blockquotes
-    /^<blockquote>(?:[^<]*|<br\s*\/?>)*<\/blockquote>$/,        
-    // HTML comments
-    /^<!--(?:[^-]|-\s?)*-->$/,  
+/*sinks */
+const sinks=["alert","eval","fetch","document.cookie","document.write","prompt","attr",
+    "document.location","innerHTML,outerHTML","setAttribute","insertAdjacementHTML",
+    "location.href"
 ];
 
-const dangerousPatterns = /(?:alert|eval\(|fetch\(|document\.cookie|document\.write|prompt\(|eval|window\.location|innerHTML|outerHTML|setAttribute|insertAdjacentHTML|location\.href|javascript:|data:|vbscript:|on(blur|change|click|dblclick|error|focus|keydown|keypress|keyup|load|mousedown|mousemove|mouseout|mouseover|mouseup|resize|scroll|submit|unload|wheel|pointermove|pointerover)=)/i;
+/*Sources wehre the attack occurs by placing the sink in the source
+[""] allows it look for each element that uses the source
+and it applies to jquery style selectors*/
 
-//Adding extra context-aware checks for potential malicious patterns
-const obfuscatedDangerousPatterns = new RegExp(
-    `(?:` +
-    `(?:%3C|<)(?:.*?)(?:%3E|>)(?:.*?)(?:(?:document|window|eval|alert|write|cookie|location|innerHTML).*)` +
-    `|(?:javascript:|data:|vbscript:)(?:.*?)(?:<script(?:.*?)(?:<\/script>)?)` +
-    `|(?:<[^>]*?on[a-z]+=[^>]*?)` +
-    `)`, 'i'
+const htmlSources = [
+    "[href]","[src]","[onclick]","[onload]","[onkeydown]","[onmousedown]","[onerror]",
+    "[ondrag]","[oncopy]","[onmouseover]","[onloadstart]","[style]","[iframe]","[script]"           
+];
+
+const plainHtmlSources=["href","src","onclick", "onload","onkeydown","onmousedown","onerror",
+    "ondrag","oncopy","onmouseoever","onloadstart","style","iframe","script"];
+
+
+/*regular expression for sinks to detect if a string is found */
+//using BOTH of them
+
+// Build the regex for sinks  
+const sinkPattern = sinks.map(sink => sink.replace(/([.*+?^${}()|[\]\\])/g, '\\$1')).join("|"); // Escape special characters
+
+// Consolidated regex for detecting XSS payloads with and without attribute names
+const htmlRegexPattern = new RegExp(
+    `(?:\\b(?:[a-zA-Z-]+)\\s*=\\s*)?["']?\\s*(?:(javascript|vbscript|data|file|livescript|about|blob|ftp):[^"'>]+|[^"'>]*)?[^"'>]*(${sinkPattern})`, 
+    'i'
 );
 
-arraysForData=['payloadDataset0','payloadDataset1','payloadDataset2'];
-arraysForModelInStorage=["model1","model2","model3"];
+
+const scriptTagsSinksRegex = new RegExp(
+    `\\b(?:${sinks.join("|")})\\s*\\(` +                                  
+    `([^()]*|\\([^()]*\\)|'[^']*'|"[^"]*")\\)|` +                       
+    `\\b(?:${sinks.join("|")})\\s*=\\s*([^;]*?)(?:;|$)|` +              
+    `\\b(?:${sinks.join("|")})\\s*\\+\\s*(['"])(.*?)(?:\\1|$)|` +      
+    `\\b(?:${sinks.join("|")})\\s*\\+\\s*([^\\s;]+)` +                 
+    `(?=[;\n]|$)`,                                                       
+    'gi'   
+);
 
 
+/*functions   */
 
-function getStoredData(item){ //if this is async it would wait for the promise of fetching all the data
-    //using the key
-    const storedData = localStorage.getItem(item); // Retrieve the string
+//these only store one array with node lists i want to make each source have its own seperate array to compare
+const foundHtmlSources=[]; 
+
+/*this stores the sources as well as the elemnts that use them but that contains an array with many arrays inside the one array
+so i try it make easier to  manage
+
+it gets the elements that use the selected sources depending on the source array chosen*/
+function searchForSources(sources,li){
+    /*loop through each item in the source list*/
+    //getting all
+    let allElements;
+    for(x=0;x<sources.length;x++){
+        allElements=document.querySelectorAll("*"+sources[x])/*stores elements that have use a certain source*/
+        li.push(allElements);
+    }
+    return li //stores the values in the array that stores node lists
+}
+
+//These values store the elemets that use the sources but the elements are stored in seperate arrays inside the one array
+
+//trying break down list into seperate list
+const seperateHtmlArray=[];
+
+//this functions combines the sources for each categratory into one array because the previous list contains sub lists
+ function joinNodeLists(sourceHolder,container){
+    /*array length is but it has other lists inside etc:
+     array [node list1, node list 2]*/
+    for(z=0;z<sourceHolder.length;z++){
+        for(y=0;y<sourceHolder[z].length;y++){
+            //accesses each item in the node list
+            //storing the node list into a seperate list to make them easy to check
+            //check if a node list is empty
+            container.push(sourceHolder[z][y]);
+        }
+    }
+    return container;
+}
+//the elements are seperate arrays to be analysed and the function combines the node lists into one ARRAY
+
+
+/*trying tp get script tag becuase this is a hard source to check */
+function detectScriptsWithRegExp(){
+    const scriptTags=document.querySelectorAll("script");
+    let x=0;
     try{
-        if (storedData) {//if found in storage
-        const payloadDataSet = JSON.parse(storedData); // Parse the JSON string back to an array
-        
-        //decode each element to string
-        const decodedDataset=payloadDataSet.map(encodedPayload=>
-            decodeURIComponent(atob(encodedPayload))
-        );
-        return decodedDataset
-    }
+        scriptTags.forEach((script)=>{//check if script content is null and see if it matches regular expressions
+        //text context contains the syntax inside the script tags etc <script>console.log("bye")</script>
+        x++;
+        if(script.textContent!==""){ /*check for empty string*/
+            const matches=scriptTagsSinksRegex.test(script.textContent); /*For scrip tag*/
+            //.exec(script.textContent)
+            //matches[0]
+            
+            if(matches){
+                console.log("Payload found",matches,"\n"); //match is like test but it returns the part of the code that is suspicious
+                //encoding is done to prevent the dom payload from executing
+                encodeNow=btoa(String.fromCharCode(...new TextEncoder().encode(script.textContent)));
+                script.textContent=encodeNow;
+                console.log("Script tag text content after being encoded", script.textContent,"\n");
+        }}
+    })
     }catch(error){
-        console.error("Error parsing data set",error);//if error is found
-        return [];
-    }
-} 
-
-
-function collectDatasets(){
-    //set dataSets
-    let dataSets=[];
-    for(const data of arraysForData){ // data is each item in arraysForData
-        const dataset=getStoredData(data);//for each item call the function and waits for decodedDataset to be returned
-        dataSets.push(dataset);
-    }
-    return dataSets;
-
-}
-
-function arrangeTrainingData(data){
-    //makes arrays and for each payload
-    //calculates the length as a feature and classifies payload as safe or dangerous
-    const xs=[];//features
-    const ys=[];//labels
-    data.forEach(payload => {
-        //assuming payload is string
-        const length=payload.length; //example feature
-        //is payload matching at least one of the safe patterns - done with some function
-        const isSafe=safePatterns.some(pattern=>
-        typeof pattern==='string' ? payload.includes(pattern): // checks for strings and regular expressions
-    pattern.test(payload));
-        const isDangerous=!isSafe && (dangerousPatterns.test(payload) ||
-    obfuscatedDangerousPatterns.test(payload));//see if it matches the dangerous or obfuscated patterns
-        xs.push([length]);
-
-        //includes one hot encoding which converts data into numbers format
-        ys.push(isSafe ? [1, 0, 0] : isDangerous ? [0, 1, 0] : [0, 0, 1]); // [safe, dangerous, neutral or unknown payload]
-    });
-
-    return{
-        xs: tf.tensor2d(xs), // Features tensor
-        ys: tf.tensor2d(ys) // Labels tensor
-        
-        //converts feature and label arrays to tensorFlow tensors
-    };
+        console.log("Error occured",error);
+    } 
 }
 
 
-
-//each dataset has a model
-async function trainModel(dataSets){ //async returns a promise
-    let completeCounter=0;//checks if training for each model is done
-    const trainedPromises=[];//holds asynchronus training promises
-    //for each calls a function for each item in array
-    dataSets.forEach((data,index)=>{ //data is datsets
-        //The trainng process
-        const trainingData=arrangeTrainingData(data); //calls dataset to get formatted tensors
-    //makes object for sequential model
-    const model=tf.sequential();
-    //this builds a neural network
-    model.add(tf.layers.dense({ units: 64, activation: 'relu', inputShape: [1] }));
-    model.add(tf.layers.dense({ units: 3, activation: 'softmax' }));
-    //comiples prepares neural network for training
-    model.compile({ optimizer: 'adam', loss: 'categoricalCrossentropy', metrics: ['accuracy'] });
-    
-    //this is the asynchronus part of the model
-    //.fit function trains machine learning model on dataset
-    const trainedPromise=model.fit(trainingData.xs,trainingData.ys,{
-        epochs: 50,
-        callbacks: {
-            onEpochEnd: function(epoch, logs) {
-                console.log("Epoch: " + epoch + ", Loss: " + logs.loss + ", Accuracy: " + logs.acc);
+//this needs to check for the value of the sources based on the array of xss sources
+//loop through each element and checks the event id attribute value
+function detectSinksWithRegExp(sourceArray,sources){
+    for(k=0;k<sourceArray.length;k++){
+        for(a=0;a<sources.length;a++){
+            try{
+            const attributeValue=sourceArray[k].getAttribute(sources[a]);//originally was meant to loop through teh source values
+                if(htmlRegexPattern.test(attributeValue)){ 
+                    //checking attribute value matches the pattern with the sinks regular expression 
+                    console.log("Found dom xss payload at",attributeValue,"in",sourceArray[k]);
+                    const encodedValue=btoa(attributeValue);
+                    
+                    //encoding is done to prevent the dom payload from executing and changing the original sourceArray value
+                    //trying to set the new attribute value in the DOM   
+                    sourceArray[k].setAttribute(sources[a],encodedValue);
+                    console.log("Element after the attribute value was encoded",sourceArray[k]);
+            }           
+        }catch(error){
+                console.error("Could not process",sourceArray[k],"Error: ",error);
             }
         }
-    }).then(() => { //uses the promise if it was successful
-        console.log("Model training complete for the model",index+1);
-        completeCounter++;//add counter by 1
-        localStorage.setItem("model"+(completeCounter), JSON.stringify(model.toJSON()));
-        if(completeCounter===dataSets.length){
-            console.log("ALL MODELS TRAINED, READY TO COMBINE ");
-        }
-    }).catch(error => {
-        console.error("Error during training:", error);
+}
+}
+
+/*DOM observer allows the code to check for any changes in the web page source code*/
+function observeWebpage(){ //this function works
+    const bodyObserver = new MutationObserver((mutations) => { //intialise mutation object
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'childList' || mutation.type === 'attributes'
+                || mutation.type==='subtree' ||mutation.type==='characterData') {
+                //if true function triggers
+                console.log("Changes detected in web page");
+                //console.log("HTML & CSS sources",htmlElements,"\n");
+                    
+            }
+        });
     });
-    trainedPromises.push(trainedPromise);
+
+    bodyObserver.observe(document.documentElement, { /*documentElement allows it scan every thing in the HTML*/
+        childList: true, //watch children
+        attributes: true, //watch for attribute changes
+        subtree: true, // Observe all descendants of the <body>
+        characterData: true //watch for changes in character data
     });
-    //Promise.all() method returns a single Promise from a list of promises, when all promises fulfill
-    await Promise.all(trainedPromises);
 }
 
-//passing datasets as a array into function parameter
-//to run each dataSet and store them to combine them later
+/*Where main program starts */
+async function main(){
+    let htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO stores the values in the array that stores node lists(sub arrays)
+    console.log("Displaying htmlHolder",htmlHolder);
+    let htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);
+    window.htmlElements=htmlElements; //make global
 
-//trying to see if i can run function if model are not in storage
-async function checkAndTrainModels() {
-    //wait for returned array which promise
-    let dataSets= collectDatasets();//using  array returned in function
-    if(dataSets){//if true
-        console.log("Datasets have been collected");
-        //console.log(dataSets); //was checking if data was really there
-    }else{
-        console.log("No datasets found");
-    }
-    
-    //let dataSets=await collectDatasets();// waits for all the datasets to be stored into one array and returns one array
-    if (checkModelsInStorage()==false) {
-        console.log("No models found in local storage. Starting training models...");
-        
-        if(dataSets.length===0){
-            console.error("There are no datasets that can be used for training");
-        }
+    /*console.log("HTML WHERE XSS PAYLOADS HAVE BEEN FOUND")
+    detectSinksWithRegExp(htmlElements,plainHtmlSources);
+    console.log("JAVASCRIPT ELEMENTS");
+    detectScriptsWithRegExp();*/
 
-        await trainModel(dataSets); // Call the trainModel function with the datasets
-    } else {
-        console.log("All models are already trained and stored in local storage.");
-    }
+    //set up observer to add real time detection
+    observeWebpage();
+
+    console.log("Checking htmlElements works",htmlElements);
 }
-
-function checkModelsInStorage(){
-    return arraysForModelInStorage.every(modelName=>localStorage.getItem(modelName));
-    //returns true of false if every model is in storage
-}
-
-//wait for all the dataSets to be fetched then train and load models
-
-async function fetchDataAndTrainModel(){
-    try{
-        await window.fetchAllData(); // Fetch data before moving to next stage
-        await checkAndTrainModels();   // wait for model to be trained
-    }catch(error){
-        console.error(error);
-    }
-}
-//calling function
- fetchDataAndTrainModel();
+main();
+window.main=main;
 
 
-//trying to load models from storage
-// i know the length of the model array
-async function loadModels(){
-    await fetchDataAndTrainModel();
-    //array to store models
-    let models=[];
-    for(z=1;z<4;z++){
-        const modelData=JSON.parse(localStorage.getItem("model"+z));
-    if(!modelData){
-        console.error("Model data is not valid:", modelName);
-    }
-    //if false
-    try {
-        const modelParse = JSON.parse(modelData);
-            // Reconstructing the model from JSON data
-        const model = await tf.models.modelFromJSON(modelParse); //wait for promise
-        models.push(model); // Add the model to the array
-        } catch (error) {
-        console.error("Error loading model", z);
-        }
-    }
-    //outside loop
-    z++;
-    return models
-
-}
 
 
-//trying to combine the models to get final predciton
-//prediction will be used to check if the input matches is safe, dangerous or neutral
-async function combineModels(models,inputData){//fetch data from local storage
-    // If models are passed, use them; otherwise, retrieve from local storage
-    const storedModels = models.length ? models : JSON.parse(localStorage.getItem('models')) || [];
-
-    const predictions=await Promise.all(storedModels.map(model=>
-    model.predict(inputData)));
-
-    //get average or combine models makes a combinedprediction
-    const combinedPrediction=predictions.reduce((acc,curr)=> acc.add(curr),
-    tf.zeros(predictions[0].shape)).div(models.length);
-
-    
-    return combinedPrediction;// returns al the information about the object which stores information
-}
-
-
-//function to assign category for final prediction
-function assignCategory(prediction){
-    const values=prediction.dataSync();//;Get value of regular array
-    //arrays with the 3 numbers are from the categroy assignmenets given in
-    //arrange training data function
-    //check which values have the highest value
-    if(values[0]>values[1]&& values[0]>values[2]){
-        return { category: [1, 0, 0], label: "Safe" }; //is safe category
-    } else if(values[1]>values[0] && values[1]>values[2]){
-        return { category: [0, 1, 0], label: "Dangerous" }; //Dangerous category
-    } else if(values[2]>values[0] && values[2]>values[1]){
-       return { category: [0, 0, 1], label: "Neutral or Unknown" }; // neutral or unkown category
-    } else{
-        return { category: [0.5, 0.5, 0], label: "Ambiguous Result" }; //Unclear
-    }
-}
-
-async function processPayloads(input,models){
-    const inputDataTensors=input.map(payload=>
-    tf.tensor2d([[payload.length]]));//pass each payload as a 2d array
-
-    //iterate through each input that will be predicted
-    for(const inputData of inputDataTensors){
-        const finalPrediction=await combineModels(models,inputData);//calls function which return value and //returns results from function
-        //console.log("Final prediction for payload: ",finalPrediction); //may not need to log the object
-
-        //assign a categroy based on prediction
-        //finalprediction as the parameter
-        const classfication=assignCategory(finalPrediction);
-        //get original payload
-        const originalPayload=input[inputDataTensors.indexOf(inputData)];//get index of value
-
-        if(await classfication.label==="Dangerous"){ //awaits for promise then checks
-            //display dangerous payload found
-            console.log("Dangerous payload found",originalPayload);
-        }else if(await classfication.label==="Safe"){//awaits promise then checks
-            console.log("Payload is safe",originalPayload);
-        }else if(await classfication.label==="Neutral or Unknown",originalPayload){
-            console.log("Cannot classify what this is",originalPayload);
-        }
-    }
-}
-
-//making processpayloads function global
-window.processPayloads=processPayloads;
-
-
-//making example array of payloads
-arrayOfPayloads=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%72t(1)>">X</a','<img src=xss onerror=alert(1)>'];
-async function runPrediction(){
-    //console.log("Checking this function works",loadModels());
-    //length of datasets is equal to length of models
-    try {
-        window.models=await loadModels();// wait for models to be loaded making it global
-
-        // When models have been loaded display ...
-        console.log("Checking if models contains data",window.models);
-        await processPayloads(arrayOfPayloads,window.models);//waits for the function value and suing global models variable
-        console.log("Processing complete.");
-        //console.log(processPayloads.label,"Trying to see diplsaying the label from processPyaloads function works\n");// this did not show the label
-    
-    } catch (error) {
-        console.error("Error during processing:", error); // Handle errors
-    }
-}    
-runPrediction();
-
-// Call the function from another file
-test();
