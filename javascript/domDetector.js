@@ -134,6 +134,19 @@ function detectSinksWithRegExp(sourceArray,sources){
 }
 }
 
+function prevention(elements){
+    /*loop through each item in the source list*/
+    //getting all
+    let allElements=document.querySelectorAll("*")//gets all elements in the web page
+    for(x=0;x<allElements.length;x++){
+        if(allElements[x]==elements){
+            allElements[x].replaceWith(elements);
+            console.log("Element replaced",allElements[x]);
+        }
+       //console.log("Displaying text content of each element",content);
+    }
+}
+
 /*DOM observer allows the code to check for any changes in the web page source code*/
 function observeWebpage(){ //this function works
     const bodyObserver = new MutationObserver((mutations) => { //intialise mutation object
@@ -142,7 +155,8 @@ function observeWebpage(){ //this function works
                 || mutation.type==='subtree' ||mutation.type==='characterData') {
                 //if true function triggers
                 console.log("Changes detected in web page");
-                //console.log("HTML & CSS sources",htmlElements,"\n");
+                window.processPayloads(window.htmlElements,window.models); //MADE SURE THIS FUNCTION GETS CALLED TO DETECT FOR dangerous payload
+                //console.log("HTML & CSS sources",window.htmlElements,"\n");
                     
             }
         });
@@ -159,9 +173,9 @@ function observeWebpage(){ //this function works
 /*Where main program starts */
 async function main(){
     let htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO stores the values in the array that stores node lists(sub arrays)
-    console.log("Displaying htmlHolder",htmlHolder);
     let htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);
     window.htmlElements=htmlElements; //make global
+    window.prevention=prevention;
 
     /*console.log("HTML WHERE XSS PAYLOADS HAVE BEEN FOUND")
     detectSinksWithRegExp(htmlElements,plainHtmlSources);
@@ -170,10 +184,8 @@ async function main(){
 
     //set up observer to add real time detection
     observeWebpage();
-
-    console.log("Checking htmlElements works",htmlElements);
 }
-main();
+//main();
 window.main=main;
 
 
