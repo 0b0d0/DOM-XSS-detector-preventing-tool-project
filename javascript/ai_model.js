@@ -245,7 +245,7 @@ async function processPayloads(input,models){
     const inputDataTensors=input.map(payload=>
     tf.tensor2d([[payload.length]]));//pass each payload as a 2d array
 
-    //iterate through each input that will be predicted
+    //iterate through each input in the array that will be predicted
     for(const inputData of inputDataTensors){
         const finalPrediction=await combineModels(models,inputData);//calls function which return value and //returns results from function
         //console.log("Final prediction for payload: ",finalPrediction); //may not need to log the object
@@ -267,25 +267,24 @@ async function processPayloads(input,models){
     }
 }
 
-//making processpayloads function global
-window.processPayloads=processPayloads;
-
-
 //making example array of payloads
 let arrayOfPayloads=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%72t(1)>">X</a','<img src=xss onerror=alert(1)>'];
-async function runPrediction(input){
+async function runPrediction(){
     //console.log("Checking this function works",loadModels());
     //length of datasets is equal to length of models
     try {
+        await window.main(); // called to get the variables in domDetector file
+        console.log("Checking this works",window.htmlElements);
         await window.fetchAllData(); // Using await for cleaner promise handling
 
         await checkAndTrainModels(); // Wait for models to be trained
 
         const models = await loadModels(); // Load models only once
-        console.log("Checking if this works", models);
+        //console.log("Checking if this works", models);
         
         // Process payloads with the loaded models
-        await processPayloads(input, models);
+        //await processPayloads(arrayOfPayloads, models);
+        await processPayloads(window.htmlElements, models);
         console.log("Processing complete.");
         //console.log(processPayloads.label,"Trying to see diplsaying the label from processPyaloads function works\n");// this did not show the label
     
@@ -293,7 +292,6 @@ async function runPrediction(input){
         console.error("Error during processing:", error); // Handle errors
     }
 }    
-runPrediction(arrayOfPayloads);
+//runPrediction();
 
-// Call the function from another file
-test();
+
