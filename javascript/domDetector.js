@@ -139,20 +139,20 @@ function prevention(element){//soes not work, still thinking of something
     //getting all
     let allElements=document.querySelectorAll("*")//gets all elements in the web page
 
-    // Verify `element` is a valid Node
-    if (!element || !(element instanceof Node)) {
-        console.error("The defined element is not a valid Node.");
+    // if element is not a html element
+    if (!(element instanceof HTMLElement)) {
+        console.error("The defined element is not a valid HTML element.");
         return;
-    }
-
-    for(x=0;x<allElements.length;x++){//loop through allElements
-        console.log("Sanitized elements",DOMPurify.sanitize(allElements[x]));
+    }else{ // if it is a html element
+        for(x=0;x<allElements.length;x++){//loop through allElements
+        //console.log("Sanitized elements",DOMPurify.sanitize(allElements[x]));
         if(allElements[x].isEqualNode(element)){// if a match is found
             let newElement=DOMPurify.sanitize(element.cloneNode(true)); //makes a copy of element including all child nodes
             allElements[x].replaceWith(newElement);//replace element
             console.log("Element replaced",allElements[x]);
         }
        //console.log("Displaying text content of each element",content);
+    }
     }
 }
 
@@ -183,7 +183,7 @@ function observeWebpage(){ //this function works
 /*Where main program starts */
 async function main(){
     let htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO stores the values in the array that stores node lists(sub arrays)
-    let htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);
+    let htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);//stores the DOM elements of the webpage
     window.htmlElements=htmlElements; //make global
     window.prevention=prevention;
     prevention(htmlElements); //this does not work
