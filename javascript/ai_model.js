@@ -38,8 +38,8 @@ const obfuscatedDangerousPatterns = new RegExp(
     `)`, 'i'
 );
 
-arraysForData=['payloadDataset0','payloadDataset1','payloadDataset2'];
-arraysForModelInStorage=["model1","model2","model3"];
+arraysForData=['payloadDataset0','payloadDataset1','payloadDataset2','payloadDataset3'];
+arraysForModelInStorage=["model1","model2","model3","model4"];
 
 
 
@@ -230,6 +230,8 @@ async function combineModels(models,inputData){//fetch data from local storage
     // Ensure that models array is valid
     if (!models || models.length === 0) {
         throw new Error("No valid models available for prediction.");
+    }else if(inputData.length===0){
+        throw new Error("No valid input data available for prediction.");
     }
 
     // Get predictions from all models
@@ -343,8 +345,13 @@ async function runPrediction(input){
     //console.log("Checking this function works",loadModels());
     //length of datasets is equal to length of models
     try {
-        await window.main(); // called to use the domDetector file
+        //calling the function from ther file
+        await window.main(); // called to use the domDetector file before the other function in this file are called
         console.log("Checking the elements with sources that can be used for XSS",window.htmlElements);
+
+        if(input.length==0){//if there is no data do nothing
+        console.warn("There is no data to process");
+    }else{
         await window.fetchAllData(); // Using await for cleaner promise handling
 
         await checkAndTrainModels(); // Wait for models to be trained
@@ -356,8 +363,8 @@ async function runPrediction(input){
         //await processPayloads(arrayOfPayloads, models);
         await processPayloads(input, models);
         console.log("Processing complete.");
-
-    
+    }
+        
     } catch (error) {
         console.error("Error during processing:", error); // Handle errors
     }
