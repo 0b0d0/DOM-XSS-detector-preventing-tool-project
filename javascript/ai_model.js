@@ -2,6 +2,8 @@
 instead of using regular expression only for detection and encoding only for prevention*/
 /*if a function is async has has an asynchronus nature without the async the logic cannot work */
 
+/*31-01-2026  ; something is wrong with the models or the prediction not being to detect xss payloads correctly, has not been fixed yet*/
+
 //Adding patterns to train the models
 const safePatterns = [
     /^<p>(?:[^<]*|<br\s*\/?>)*<\/p>$/, // Matches <p> tags containing safe text or <br> tags
@@ -228,11 +230,10 @@ async function combineModels(models,inputData){//fetch data from local storage
     }else if(inputData.length===0){
         throw new Error("No valid input data available for prediction.");
     }
-
     // Get predictions from all models
     let predictions = await Promise.all(models.map(model => model.predict(inputData)));
     // Combined debugging step
-    predictions.forEach((pred, index) => {
+    /*predictions.forEach((pred, index) => {
         // Log prediction shape and values
         console.log('Prediction', index, 'shape:', pred.shape);
         console.log('Prediction', index, 'values:', pred.arraySync());
@@ -247,7 +248,7 @@ async function combineModels(models,inputData){//fetch data from local storage
         if (hasInf) {
             console.error('Prediction', index, 'contains Infinite values.');
         }
-    });
+    });*/
 
 
     // Ensure all predictions are valid and have the same shape
@@ -291,6 +292,28 @@ function domElementToString(element){
         }   
     } 
 
+
+async function processPayloads(input,models){
+    const inputDataTensors = input.map(payload => { //return object as tensorflow object
+    if(payload.length!==0){// if the payload is not empty
+        if (typeof payload === 'string') {//is the variable a string
+        return tf.tensor2d([[payload.length, payload.split(/\s+/).length]]);
+        //this return statement allows predictions to be done on an element that is a string
+        } 
+        else if(payload instanceof HTMLElement){//checking if it is a  DOM element
+            console.log("The element was an instance of HTML element")
+            console.log(" DOM element data type before converting to string",domElementToString(payload));
+            let payloadString=domElementToString(payload);//get html string
+            return tf.tensor2d([[payloadString.length, payloadString.split(/\s+/).length]]); 
+            //this return statement allow prediction to be done on html elements
+        }
+        else {
+            console.error("Invalid:", payload);
+            return tf.tensor2d([[0, 0]]); // Or handle as appropriate
+        }
+    }
+    });
+    
     //iterate through each input in the array that will be predicted
     for(const inputData of inputDataTensors){
         const finalPrediction=await combineModels(models,inputData);//calls function which return value and //returns results from function
@@ -305,7 +328,7 @@ function domElementToString(element){
         if(classfication.label==="Dangerous"){ //awaits for promise then checks
             //display dangerous payload found
             console.log("Dangerous payload found",originalPayload);
-            window.prevention(originalPayload);
+            window.prevention(originalPayload);//calls this function which is from another file
 
         }else if( classfication.label==="Safe"){//awaits promise then checks
             console.log("Payload is safe",originalPayload);
@@ -315,34 +338,36 @@ function domElementToString(element){
     }
 }
 
-window.processPayloads=processPayloads; //making this global 
-
 //making example array of payloads
 let arrayOfPayloads=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%72t(1)>">X</a','<img src=xss onerror=alert(1)>'];
-async function runPrediction(){
+async function runPrediction(input){
     //console.log("Checking this function works",loadModels());
     //length of datasets is equal to length of models
     try {
-        await window.main(); // called to get the variables in domDetector file
-        console.log("Checking this works",window.htmlElements);
+        //calling the function from ther file
+        await window.main(); // called to use the domDetector file before the other function in this file are called
+
+        if(input.length==0){//if there is no data do nothing
+        console.warn("There is no data to process");
+    }else{
         await window.fetchAllData(); // Using await for cleaner promise handling
 
         await checkAndTrainModels(); // Wait for models to be trained
 
         const models = await loadModels(); // Load models only once
-        window.models=models; //making it global 
         //console.log("Checking if this works", models);
         
         // Process payloads with the loaded models
         //await processPayloads(arrayOfPayloads, models);
-        await processPayloads(window.htmlElements, models);
-        console.log("Processing complete.");
-        //console.log(processPayloads.label,"Trying to see diplsaying the label from processPyaloads function works\n");// this did not show the label
-    
+        await processPayloads(input, models);
+        console.log("Processing complete. If any change in the web page occurs information will be logged.");
+    }
+        
     } catch (error) {
         console.error("Error during processing:", error); // Handle errors
     }
 }    
-runPrediction();
+runPrediction(window.otherSources);
+window.runPrediction=runPrediction;
 
 
