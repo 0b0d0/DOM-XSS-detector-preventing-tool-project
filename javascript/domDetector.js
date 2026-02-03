@@ -1,21 +1,24 @@
 /*sinks */
-const sinks=["alert","eval","fetch","document.cookie","document.write","prompt","attr",
-    "document.location","innerHTML,outerHTML","setAttribute","insertAdjacementHTML",
-    "location.href"
+const sinks=["alert","eval","fetch","document.cookie","document.write","prompt"
 ];
 
 /*Sources wehre the attack occurs by placing the sink in the source
 [""] allows it look for each element that uses the source
 and it applies to jquery style selectors*/
 
-const htmlSources = [
+//this rray contains commands that contain values
+const otherSources = [document.URL, document.documentURI, document.URLUnencoded, document.baseURI,
+     location, location.href, location.search, location.hash, location.pathname, document.cookie, 
+     document.referrer, window.name];
+
+
+const htmlSources = [ //query selector function returns elemets using this format [source]
     "[href]","[src]","[onclick]","[onload]","[onkeydown]","[onmousedown]","[onerror]",
-    "[ondrag]","[oncopy]","[onmouseover]","[onloadstart]","[style]","[iframe]","[script]",
-    '[type="application/xml"], [xml]'          
+    "[ondrag]","[oncopy]","[onmouseover]","[onloadstart]","[style]","[iframe]"          
 ];
 
 const plainHtmlSources=["href","src","onclick", "onload","onkeydown","onmousedown","onerror",
-    "ondrag","oncopy","onmouseoever","onloadstart","style","iframe","script","xml, application/xml"];
+    "ondrag","oncopy","onmouseoever","onloadstart","style","iframe"];
 
 
 /*regular expression for sinks to detect if a string is found */
@@ -147,34 +150,39 @@ function detectSinksWithRegExp(sourceArray,sources){
 function prevention(element){//soes not work, still thinking of something
     /*loop through each item in the source list*/
     //getting all
-    let allElements=document.querySelectorAll("*")//gets all elements in the web page
+    let allElements=document.querySelectorAll(htmlSources)//gets elements that use sources in the given variable
+    let sanitizedHTML; //intialise variable
 
     // if element is not a html DOM element
     if (!(element instanceof HTMLElement)) {
-        console.log("The defined element is not a valid HTML element. Making it a valid element ...");
+        console.log("This is not a DOM element");
+        console.log("Sanitizing element ...");
+        sanitizedHTML=DOMPurify.sanitize(element); //sanitise element
+        element.replaceWith(sanitizedHTML);//replace former element with sanitised element
+    }
+    
+    else if((element instanceof HTMLElement)){ // if it is a html DOM element
+        console.log("The element is a DOM element: ",element);
+        console.log("Sanitizing element ...");
         
         //using DOMParser to convert string to DOM element
         const parser=new DOMParser;
-        //parse string to document object
-        const parseDoc=parser.parseFromString(element,"text/html");
-        //get elemets from parse documents body
-        element=parseDoc.body.children;
-        console.log("Here is the parsed element: ",element);
-    }
-    
-    else{ // if it is a html DOM element
-        console.log("The element is a DOM element: ",element);
-    }
-    for(x=0;x<allElements.length;x++){//loop through allElements
-
+        
+        for(x=0;x<allElements.length;x++){//loop through allElements
+            //need to sort this out cause i do not want a string being put in the new element i want a dom element
         if(allElements[x].isEqualNode(element)){// if a match is found
-            let sanitizedHTML = DOMPurify.sanitize(element.outerHTML); // Sanitize and clone the element
-            
-            allElements[x].replaceWith(sanitizedHTML);//replace the outer element
-            console.log("Element replaced",allElements[x]);
+            //parse string to document object
+            const parseDoc=parser.parseFromString(DOMPurify.sanitize(element.outerHTML),"text/html");
+            //get elemets from parse documents body
+            const parsedElement=parseDoc.body.children; //get parsed element
+         
+            allElements[x].replaceWith(parsedElement);//replace the outer element
+            console.log("Element was replaced",allElements[x]);
         }
        
     }
+    }
+    
 }
 
 /*DOM observer allows the code to check for any changes in the web page source code*/
@@ -184,7 +192,7 @@ function observeWebpage(){ //this function works
             if (mutation.type === 'childList' || mutation.type === 'attributes'
                 || mutation.type==='subtree' ||mutation.type==='characterData') {
                 //if true function triggers
-                console.log("Changes detected in web page");
+                console.log("Changes detected in the web page");
                 window.runPrediction(window.htmlElements);
                     
             }
@@ -204,8 +212,9 @@ async function main(){
     let htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO stores the values in the array that stores node lists(sub arrays)
     let htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);//stores the DOM elements of the webpage
     window.htmlElements=htmlElements; //make global
+    window.otherSources=otherSources;//make global
     window.prevention=prevention;
-
+    //console.log("Trying to see if i get get the data inside this source",otherDomXssSources[0]);
     //set up observer to add real time detection
     observeWebpage();
 }
