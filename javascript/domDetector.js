@@ -10,13 +10,14 @@ and it applies to jquery style selectors*/
 
 const htmlSources = [
     "[href]","[src]","[onclick]","[onload]","[onkeydown]","[onmousedown]","[onerror]",
-    "[ondrag]","[oncopy]","[onmouseover]","[onloadstart]","[style]","[iframe]","[script]",
-    '[type="application/xml"], [xml]'          
+    "[ondrag]","[oncopy]","[onmouseover]","[onloadstart]","[style]","[iframe]","[script]"           
 ];
 
 const plainHtmlSources=["href","src","onclick", "onload","onkeydown","onmousedown","onerror",
-    "ondrag","oncopy","onmouseoever","onloadstart","style","iframe","script","xml, application/xml"];
+    "ondrag","oncopy","onmouseoever","onloadstart","style","iframe","script"];
 
+const plainHtmlSources=["href","src","onclick", "onload","onkeydown","onmousedown","onerror",
+    "ondrag","oncopy","onmouseoever","onloadstart","style","iframe","script","xml, application/xml"];
 
 /*regular expression for sinks to detect if a string is found */
 //using BOTH of them
@@ -41,6 +42,8 @@ const scriptTagsSinksRegex = new RegExp(
     'gi'   
 );
 
+
+/*functions   */
 
 //these only store one array with node lists i want to make each source have its own seperate array to compare
 const foundHtmlSources=[]; 
@@ -67,24 +70,14 @@ const seperateHtmlArray=[];
 
 //this functions combines the sources for each categratory into one array because the previous list contains sub lists
  function joinNodeLists(sourceHolder,container){
-    //if it will called again i must make sure 
-    // the same elements are not being checked every call back
-
     /*array length is but it has other lists inside etc:
      array [node list1, node list 2]*/
     for(z=0;z<sourceHolder.length;z++){
         for(y=0;y<sourceHolder[z].length;y++){
             //accesses each item in the node list
             //storing the node list into a seperate list to make them easy to check
-            //these if statement do not do what i wanted
-            if(!container.includes(sourceHolder[z][y])){
-                //if container does not cotain this element add it inside
-                container.push(sourceHolder[z][y]);
-            } else if (container.includes(sourceHolder[z][y])){
-                var index=container.indexOf(sourceHolder[z][y]);
-                //remove item by splicing
-                container.splice(index,1); //removes element if already found in the array
-            }
+            //check if a node list is empty
+            container.push(sourceHolder[z][y]);
         }
     }
     return container;
@@ -143,39 +136,18 @@ function detectSinksWithRegExp(sourceArray,sources){
 }
 }
 
-
-function prevention(element){//soes not work, still thinking of something
+function prevention(elements){
     /*loop through each item in the source list*/
     //getting all
     let allElements=document.querySelectorAll("*")//gets all elements in the web page
-
-    // if element is not a html DOM element
-    if (!(element instanceof HTMLElement)) {
-        console.log("The defined element is not a valid HTML element. Making it a valid element ...");
-        
-        //using DOMParser to convert string to DOM element
-        const parser=new DOMParser;
-        //parse string to document object
-        const parseDoc=parser.parseFromString(element,"text/html");
-        //get elemets from parse documents body
-        element=parseDoc.body.children;
-        console.log("Here is the parsed element: ",element);
-    }
-    
-    else{ // if it is a html DOM element
-        console.log("The element is a DOM element: ",element);
-    }
-    for(x=0;x<allElements.length;x++){//loop through allElements
-
-        if(allElements[x].isEqualNode(element)){// if a match is found
-            let sanitizedHTML = DOMPurify.sanitize(element.outerHTML); // Sanitize and clone the element
-            
-            allElements[x].replaceWith(sanitizedHTML);//replace the outer element
+    for(x=0;x<allElements.length;x++){
+        if(allElements[x]==elements){
+            allElements[x].replaceWith(elements);
             console.log("Element replaced",allElements[x]);
         }
-       
+       //console.log("Displaying text content of each element",content);
     }
-}
+    for(x=0;x<allElements.length;x++){//loop through allElements
 
 /*DOM observer allows the code to check for any changes in the web page source code*/
 function observeWebpage(){ //this function works
@@ -185,9 +157,8 @@ function observeWebpage(){ //this function works
                 || mutation.type==='subtree' ||mutation.type==='characterData') {
                 //if true function triggers
                 console.log("Changes detected in web page");
-                //window.processPayloads(window.htmlElements,window.models); //MADE SURE THIS FUNCTION GETS CALLED TO DETECT FOR dangerous payload
+                window.processPayloads(window.htmlElements,window.models); //MADE SURE THIS FUNCTION GETS CALLED TO DETECT FOR dangerous payload
                 //console.log("HTML & CSS sources",window.htmlElements,"\n");
-                window.runPrediction(window.htmlElements);
                     
             }
         });
@@ -204,14 +175,19 @@ function observeWebpage(){ //this function works
 /*Where main program starts */
 async function main(){
     let htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO stores the values in the array that stores node lists(sub arrays)
-    let htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);//stores the DOM elements of the webpage
+    let htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);
     window.htmlElements=htmlElements; //make global
     window.prevention=prevention;
+
+    /*console.log("HTML WHERE XSS PAYLOADS HAVE BEEN FOUND")
+    detectSinksWithRegExp(htmlElements,plainHtmlSources);
+    console.log("JAVASCRIPT ELEMENTS");
+    detectScriptsWithRegExp();*/
 
     //set up observer to add real time detection
     observeWebpage();
 }
-main();
+//main();
 window.main=main;
 
 
