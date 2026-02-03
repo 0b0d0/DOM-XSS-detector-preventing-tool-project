@@ -3,7 +3,8 @@ using fetch command.*/
 
  const websiteLinks=["https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt",
     "https://raw.githubusercontent.com/yogsec/XSS-Payloads/main/dom_based_xss_payloads.txt",
-    "https://raw.githubusercontent.com/pgaijin66/XSS-Payloads/master/payload/payload.txt"
+    "https://raw.githubusercontent.com/pgaijin66/XSS-Payloads/master/payload/payload.txt",
+     "https://raw.githubusercontent.com/payload-box/xss-payload-list/main/Payloads/All-In-One.txt"
 ];
 
 
@@ -48,7 +49,7 @@ async function getDataSet(url,num){//async makes function return a promise
 //then function triggers event when a promise is (fulfilled or rejected) - syntax .then(fulfilled,rejected)
 
 async function fetchAllData(){// Made this easier to manage 
-    for(let a=0;a<3;a++){//added 3 cause i know the length of website links and websitlinks.length only gave dataset of first item
+    for(let a=0;a<4;a++){//added 3 cause i know the length of website links and websitlinks.length only gave dataset of first item
         const payloadDataset= await getDataSet(websiteLinks,a);//await for promise which is data fetched from website
         if (payloadDataset) {
             console.log("Dataset", a, "has been retrieved.");
@@ -58,12 +59,5 @@ async function fetchAllData(){// Made this easier to manage
 
 //making function global
 window.fetchAllData=fetchAllData;
-fetchAllData();
+//fetchAllData();
 
-//was was justing testing how to access global functions in another file
-function test(){
-    //IT WORKED
-    console.log("Testing if the function was imported into the other file");
-}
-//making function accessible globally
-window.test=test;

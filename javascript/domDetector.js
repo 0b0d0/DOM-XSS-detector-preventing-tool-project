@@ -16,6 +16,8 @@ const htmlSources = [
 const plainHtmlSources=["href","src","onclick", "onload","onkeydown","onmousedown","onerror",
     "ondrag","oncopy","onmouseoever","onloadstart","style","iframe","script"];
 
+const plainHtmlSources=["href","src","onclick", "onload","onkeydown","onmousedown","onerror",
+    "ondrag","oncopy","onmouseoever","onloadstart","style","iframe","script","xml, application/xml"];
 
 /*regular expression for sinks to detect if a string is found */
 //using BOTH of them
@@ -145,7 +147,7 @@ function prevention(elements){
         }
        //console.log("Displaying text content of each element",content);
     }
-}
+    for(x=0;x<allElements.length;x++){//loop through allElements
 
 /*DOM observer allows the code to check for any changes in the web page source code*/
 function observeWebpage(){ //this function works

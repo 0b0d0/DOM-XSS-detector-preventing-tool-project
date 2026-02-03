@@ -15,7 +15,8 @@
     "scripting",
     "management",
     "https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt",
-     "https://raw.githubusercontent.com/yogsec/XSS-Payloads/main/dom_based_xss_payloads.txt",
+    "https://github.com/yogsec/XSS-Payloads/blob/main/dom_based_xss_payloads.txt",
+    "https://raw.githubusercontent.com/pgaijin66/XSS-Payloads/master/payload/payload.txt",
     "storage"
 
 ],
@@ -24,12 +25,12 @@
     {
         "matches":["<all_urls>"],
         "js":[
+        "javascript/purify.min.js",
         "javascript/tensorflow.js",
         "javascript/domDetector.js",
         "javascript/popUp.js",
         "javascript/getDataSets.js",
-        "javascript/ai_model.js",
-        "javascript/serverToStoreDataSets.js"
+        "javascript/ai_model.js"
       ]
     }
 ],
@@ -42,11 +43,7 @@
 
 "browser_action": {
   "default_icon":"images/coin.png",
-  "defualt-title":"Extension",
+  "default-title":"Extension",
   "default_popup": "interface.html"
 }
 }
-
-
-
-
