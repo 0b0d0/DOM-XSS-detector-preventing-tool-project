@@ -295,22 +295,22 @@ function domElementToString(element){
 
 async function processPayloads(input,models){
     const inputDataTensors = input.map(payload => { //return object as tensorflow object
-    if(payload.length!==0){// if the payload is not empty
-        if (typeof payload === 'string') {//is the variable a string
-        return tf.tensor2d([[payload.length, payload.split(/\s+/).length]]);
+    if (typeof payload === 'string') {//is the variable a string
+        if(payload.length!==0){// if the payload is not empty
+            return tf.tensor2d([[payload.length, payload.split(/\s+/).length]]);
         //this return statement allows predictions to be done on an element that is a string
-        } 
-        else if(payload instanceof HTMLElement){//checking if it is a  DOM element
-            console.log("The element was an instance of HTML element")
-            console.log(" DOM element data type before converting to string",domElementToString(payload));
-            let payloadString=domElementToString(payload);//get html string
-            return tf.tensor2d([[payloadString.length, payloadString.split(/\s+/).length]]); 
-            //this return statement allow prediction to be done on html elements
         }
-        else {
-            console.error("Invalid:", payload);
-            return tf.tensor2d([[0, 0]]); // Or handle as appropriate
-        }
+    } 
+    else if(payload instanceof HTMLElement){//checking if it is a  DOM element
+        console.log("The element was an instance of HTML element")
+        console.log(" DOM element data type before converting to string",domElementToString(payload));
+        let payloadString=domElementToString(payload);//get html string
+        return tf.tensor2d([[payloadString.length, payloadString.split(/\s+/).length]]); 
+        //this return statement allow prediction to be done on html elements
+    }
+    else {
+        console.error("Invalid:", payload);
+        return tf.tensor2d([[0, 0]]); // Or handle as appropriate
     }
     });
     
@@ -369,5 +369,6 @@ async function runPrediction(input){
 }    
 runPrediction(window.otherSources);
 window.runPrediction=runPrediction;
+
 
 
