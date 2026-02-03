@@ -2,8 +2,6 @@
 instead of using regular expression only for detection and encoding only for prevention*/
 /*if a function is async has has an asynchronus nature without the async the logic cannot work */
 
-/*31-01-2026  ; something is wrong with the models or the prediction not being to detect xss payloads correctly, has not been fixed yet*/
-
 //Adding patterns to train the models
 const safePatterns = [
     /^<p>(?:[^<]*|<br\s*\/?>)*<\/p>$/, // Matches <p> tags containing safe text or <br> tags
@@ -26,8 +24,6 @@ const safePatterns = [
     /^<script\s*\/?>$/ // Matches empty <script> tags
 ];
 
-
-
 const dangerousPatterns = /(?:\b(alert|eval|fetch|document\.cookie|document\.write|prompt|window\.location|innerHTML|outerHTML|setAttribute|insertAdjacentHTML|location\.href)\b|javascript:|data:|vbscript:|on\w+=)/i;
 //Adding extra context-aware checks for potential malicious patterns
 const obfuscatedDangerousPatterns = new RegExp(
@@ -40,7 +36,6 @@ const obfuscatedDangerousPatterns = new RegExp(
 
 arraysForData=['payloadDataset0','payloadDataset1','payloadDataset2','payloadDataset3'];
 arraysForModelInStorage=["model1","model2","model3","model4"];
-
 
 
 function getStoredData(item){ //if this is async it would wait for the promise of fetching all the data
@@ -211,7 +206,7 @@ async function loadModels(){
             const model = await tf.models.modelFromJSON(modelParse); //wait for promise
             models.push(model); // Add the model to the array
             } catch (error) {
-            console.error("Error loading model", z);
+            console.error("Error loading model", error);
             }
         }
         //outside loop
@@ -236,6 +231,24 @@ async function combineModels(models,inputData){//fetch data from local storage
 
     // Get predictions from all models
     let predictions = await Promise.all(models.map(model => model.predict(inputData)));
+    // Combined debugging step
+    predictions.forEach((pred, index) => {
+        // Log prediction shape and values
+        console.log('Prediction', index, 'shape:', pred.shape);
+        console.log('Prediction', index, 'values:', pred.arraySync());
+        // Check for NaN values
+        const hasNaN = tf.any(tf.isNaN(pred)).dataSync()[0];
+        if (hasNaN) {
+            console.error('Prediction', index, 'contains NaN values.');
+        }
+
+        // Check for Infinite values
+        const hasInf = tf.any(tf.isInf(pred)).dataSync()[0];
+        if (hasInf) {
+            console.error('Prediction', index, 'contains Infinite values.');
+        }
+    });
+
 
     // Ensure all predictions are valid and have the same shape
     if (predictions.some(prediction => !prediction || prediction.shape.length !== 2)) {
@@ -266,36 +279,18 @@ function assignCategory(prediction){
     }
 }
 
+//this is incase the input parameter in processPayloads is not a string
+//this was done so it can process trhe string of the DOM element so it does
+//not break the program
 function domElementToString(element){
     if(element instanceof HTMLElement){// is it a html element
+            //return the full element tag
+        return element.outerHTML; //outer html returns a string
+    }else{//if it is a string return
+        return element.outerHTML;
+        }   
+    } 
 
-        if(element.tagName.toLocaleLowerCase==='script'){//is element a script tag
-            console.warn("This is a <script> tag");
-            //return entire script tag
-            return element.outerHTML;
-        }
-        // Start constructing the opening tag with the element's tag name if the tag name is not script
-        let openingTag = '<' + element.tagName.toLowerCase();
-        
-        // Check if the element has any attributes
-        if (element.hasAttributes()) {
-            const attributesArray = [];
-            // Loop through all attributes of the element
-            for (let attr of element.attributes) {
-                // Push each attribute in the format name="value" into the array
-                attributesArray.push(attr.name + '="' + attr.value + '"');
-            }
-            // Join the attributes and append them to the opening tag
-            openingTag += ' ' + attributesArray.join(' ');
-        }
-
-        // Close the opening tag
-        openingTag += '>';
-        return openingTag; // Return the final opening tag as a string    
-    } else {
-        console.error("Provided payload is not a valid DOM element.");
-    }
-}
 
 async function processPayloads(input,models){
     const inputDataTensors = input.map(payload => { //return object as tensorflow object
@@ -304,6 +299,7 @@ async function processPayloads(input,models){
         //this return statement allows predictions to be done on an element that is a string
     } 
     else if(payload instanceof HTMLElement){//checking if it is a  DOM element
+        console.log("The element was an instance of HTML element")
         console.log(" DOM element data type before converting to string",domElementToString(payload));
         let payloadString=domElementToString(payload);//get html string
         return tf.tensor2d([[payloadString.length, payloadString.split(/\s+/).length]]); 
@@ -329,7 +325,7 @@ async function processPayloads(input,models){
         if(classfication.label==="Dangerous"){ //awaits for promise then checks
             //display dangerous payload found
             console.log("Dangerous payload found",originalPayload);
-            window.prevention(originalPayload);
+            window.prevention(originalPayload);//calls this function which is from another file
 
         }else if( classfication.label==="Safe"){//awaits promise then checks
             console.log("Payload is safe",originalPayload);
@@ -362,7 +358,7 @@ async function runPrediction(input){
         // Process payloads with the loaded models
         //await processPayloads(arrayOfPayloads, models);
         await processPayloads(input, models);
-        console.log("Processing complete.");
+        console.log("Processing complete. If any change in the web page occurs information will be logged.");
     }
         
     } catch (error) {
