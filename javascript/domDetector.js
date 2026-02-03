@@ -76,8 +76,15 @@ const seperateHtmlArray=[];
         for(y=0;y<sourceHolder[z].length;y++){
             //accesses each item in the node list
             //storing the node list into a seperate list to make them easy to check
-            //check if a node list is empty
-            container.push(sourceHolder[z][y]);
+            //these if statement do not do what i wanted
+            if(!container.includes(sourceHolder[z][y])){
+                //if container does not cotain this element add it inside
+                container.push(sourceHolder[z][y]);
+            } else if (container.includes(sourceHolder[z][y])){
+                var index=container.indexOf(sourceHolder[z][y]);
+                //remove item by splicing
+                container.splice(index,1); //removes element if already found in the array
+            }
         }
     }
     return container;
@@ -189,6 +196,7 @@ async function main(){
 }
 //main();
 window.main=main;
+
 
 
 
