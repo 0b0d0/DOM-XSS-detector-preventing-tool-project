@@ -2,8 +2,6 @@
 instead of using regular expression only for detection and encoding only for prevention*/
 /*if a function is async has has an asynchronus nature without the async the logic cannot work */
 
-/*31-01-2026  ; something is wrong with the models or the prediction not being to detect xss payloads correctly, has not been fixed yet*/
-
 //Adding patterns to train the models
 const safePatterns = [
     /^<p>(?:[^<]*|<br\s*\/?>)*<\/p>$/, // Matches <p> tags containing safe text or <br> tags
@@ -223,8 +221,9 @@ async function loadModels(){
 //trying to combine the models to get final predciton
 //prediction will be used to check if the input matches is safe, dangerous or neutral
 
-async function combineModels(models,inputData){//fetch data from local storage
+async function combineModels(models,inputData){//makes a prediction for one element
     // Ensure that models array is valid
+    //console.log("Checking what is inside inputData: ",inputData);
     if (!models || models.length === 0) {
         throw new Error("No valid models available for prediction.");
     }else if(inputData.length===0){
@@ -232,24 +231,6 @@ async function combineModels(models,inputData){//fetch data from local storage
     }
     // Get predictions from all models
     let predictions = await Promise.all(models.map(model => model.predict(inputData)));
-    // Combined debugging step
-    /*predictions.forEach((pred, index) => {
-        // Log prediction shape and values
-        console.log('Prediction', index, 'shape:', pred.shape);
-        console.log('Prediction', index, 'values:', pred.arraySync());
-        // Check for NaN values
-        const hasNaN = tf.any(tf.isNaN(pred)).dataSync()[0];
-        if (hasNaN) {
-            console.error('Prediction', index, 'contains NaN values.');
-        }
-
-        // Check for Infinite values
-        const hasInf = tf.any(tf.isInf(pred)).dataSync()[0];
-        if (hasInf) {
-            console.error('Prediction', index, 'contains Infinite values.');
-        }
-    });*/
-
 
     // Ensure all predictions are valid and have the same shape
     if (predictions.some(prediction => !prediction || prediction.shape.length !== 2)) {
@@ -263,7 +244,7 @@ async function combineModels(models,inputData){//fetch data from local storage
 }
 
 
-//function to assign category for final prediction
+//function to assign category for final prediction for one element
 function assignCategory(prediction){
     const values=prediction.dataSync();//;Get value of regular array
     //arrays with the 3 numbers are from the categroy assignmenets given in
@@ -287,33 +268,39 @@ function domElementToString(element){
     if(element instanceof HTMLElement){// is it a html element
             //return the full element tag
         return element.outerHTML; //outer html returns a string
-    }else{//if it is a string return
-        return element.outerHTML;
-        }   
+    }else if(element instanceof Location){//if it is a string return
+        return element.href;
+    }else{
+        return ""; //return empty string for invalid input
+    }   
     } 
 
 
 async function processPayloads(input,models){
-    const inputDataTensors = input.map(payload => { //return object as tensorflow object
+    //return tf.tensor2d means a new tensor object is returned 
+    const inputDataTensors = input.map(payload => { //loops through each item
     if (typeof payload === 'string') {//is the variable a string
         if(payload.length!==0){// if the payload is not empty
             return tf.tensor2d([[payload.length, payload.split(/\s+/).length]]);
         //this return statement allows predictions to be done on an element that is a string
         }
     } 
-    else if(payload instanceof HTMLElement){//checking if it is a  DOM element
-        console.log("The element was an instance of HTML element")
-        console.log(" DOM element data type before converting to string",domElementToString(payload));
+    else if(payload instanceof HTMLElement || payload instanceof Location){//checking if it is a  DOM element
         let payloadString=domElementToString(payload);//get html string
-        return tf.tensor2d([[payloadString.length, payloadString.split(/\s+/).length]]); 
+        console.log("The element was an instance of HTML element");
+        console.log(" DOM element data type before converting to string",payloadString);
+
+        return tf.tensor2d([[payloadString.length, payloadString.split(/\s+/).length]]);
+         
         //this return statement allow prediction to be done on html elements
     }
     else {
         console.error("Invalid:", payload);
-        return tf.tensor2d([[0, 0]]); // Or handle as appropriate
+        //return tf.tensor2d([[0, 0]]); // Or handle as appropriate
     }
-    });
-    
+    }).filter(tensor => tensor !== undefined);//filtering out undefined values
+    //inputDataTensors returns an array containing 2D tensors
+
     //iterate through each input in the array that will be predicted
     for(const inputData of inputDataTensors){
         const finalPrediction=await combineModels(models,inputData);//calls function which return value and //returns results from function
@@ -325,21 +312,25 @@ async function processPayloads(input,models){
         //get original payload
         const originalPayload=input[inputDataTensors.indexOf(inputData)];//get index of value
 
+        //checks if the data matches one of these labels
+
         if(classfication.label==="Dangerous"){ //awaits for promise then checks
             //display dangerous payload found
             console.log("Dangerous payload found",originalPayload);
             window.prevention(originalPayload);//calls this function which is from another file
 
-        }else if( classfication.label==="Safe"){//awaits promise then checks
-            console.log("Payload is safe",originalPayload);
+        }else if( classfication.label==="Safe"){
+            console.log("Element is safe",originalPayload);
         }else if(classfication.label==="Neutral or Unknown",originalPayload){
             console.log("Cannot classify what this is",originalPayload);
         }
     }
 }
 
+
 //making example array of payloads
 let arrayOfPayloads=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%72t(1)>">X</a','<img src=xss onerror=alert(1)>'];
+
 async function runPrediction(input){
     //console.log("Checking this function works",loadModels());
     //length of datasets is equal to length of models
@@ -366,9 +357,10 @@ async function runPrediction(input){
     } catch (error) {
         console.error("Error during processing:", error); // Handle errors
     }
-}    
+}
+//calling main function
+runPrediction(window.htmlElements);    
 runPrediction(window.otherSources);
 window.runPrediction=runPrediction;
-
 
 
