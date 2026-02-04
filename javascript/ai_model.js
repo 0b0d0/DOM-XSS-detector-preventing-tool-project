@@ -287,9 +287,6 @@ async function processPayloads(input,models){
     } 
     else if(payload instanceof HTMLElement || payload instanceof Location){//checking if it is a  DOM element
         let payloadString=domElementToString(payload);//get html string
-        console.log("The element was an instance of HTML element");
-        console.log(" DOM element data type before converting to string",payloadString);
-
         return tf.tensor2d([[payloadString.length, payloadString.split(/\s+/).length]]);
          
         //this return statement allow prediction to be done on html elements
@@ -359,8 +356,7 @@ async function runPrediction(input){
     }
 }
 //calling main function
-runPrediction(window.htmlElements);    
-runPrediction(window.otherSources);
-window.runPrediction=runPrediction;
+runPrediction(window.allSources);    
+window.runPrediction=runPrediction; //make global
 
 
