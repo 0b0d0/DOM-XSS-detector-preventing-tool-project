@@ -223,17 +223,20 @@ function observeWebpage(){ //this function works
 
 /*Where main program starts */
 async function main(){
+    let allSources;//combing the two arrays with the sources
+    
     let htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO stores the values in the array that stores node lists(sub arrays)
     let htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);//stores the DOM elements of the webpage
     window.htmlElements=htmlElements; //make global
-    window.otherSources=otherSources;//make global
+    window.otherSources=otherSources.filter(item => item !== undefined);//make global and filter out undefined elements
     window.prevention=prevention;
-    //console.log("Trying to see if i get get the data inside this source",otherDomXssSources[0]);
-    //set up observer to add real time detection
     observeWebpage();
+    allSources=[...window.htmlElements,... window.otherSources];//use spread operator
+    window.allSources=allSources;// make global
 }
 main();
 window.main=main;
+
 
 
 
