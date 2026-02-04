@@ -10,7 +10,8 @@ and it applies to jquery style selectors*/
 const otherSources = [document.URL, document.documentURI, document.URLUnencoded, document.baseURI,
      location, location.href, location.search, location.hash, location.pathname, document.cookie, 
      document.referrer, window.name];
-
+//most of the sources output data types that are strings
+//only one of them displays Location object
 
 const htmlSources = [ //query selector function returns elemets using this format [source]
     "[href]","[src]","[onclick]","[onload]","[onkeydown]","[onmousedown]","[onerror]",
@@ -147,7 +148,7 @@ function detectSinksWithRegExp(sourceArray,sources){
 }
 
 
-function prevention(element){//soes not work, still thinking of something
+function prevention(element){//if dangerous label is found this function is called
     /*loop through each item in the source list*/
     //getting all
     let allElements=document.querySelectorAll(htmlSources)//gets elements that use sources in the given variable
@@ -155,10 +156,11 @@ function prevention(element){//soes not work, still thinking of something
 
     // if element is not a html DOM element
     if (!(element instanceof HTMLElement)) {
-        console.log("This is not a DOM element");
+        console.log("This is not a DOM element",element);
         console.log("Sanitizing element ...");
         sanitizedHTML=DOMPurify.sanitize(element); //sanitise element
-        element.replaceWith(sanitizedHTML);//replace former element with sanitised element
+        element=sanitizedHTML;//replace former element with sanitised element
+        console.log("sanitised element",element);
     }
     
     else if((element instanceof HTMLElement)){ // if it is a html DOM element
@@ -175,12 +177,23 @@ function prevention(element){//soes not work, still thinking of something
             const parseDoc=parser.parseFromString(DOMPurify.sanitize(element.outerHTML),"text/html");
             //get elemets from parse documents body
             const parsedElement=parseDoc.body.children; //get parsed element
-         
-            allElements[x].replaceWith(parsedElement);//replace the outer element
-            console.log("Element was replaced",allElements[x]);
+            
+            if(parsedElement.length>0){//check if parsedElement has any children
+                allElements[x].replaceWith(parsedElement);//replace the outer element
+                console.log("Element was replaced",allElements[x]);
+            } else if(parsedElement.length==0){
+                console.warn("Parsed element is empty, cannot replace: ",allElements[x]);
+            }
         }
        
     }
+    }
+    else if(element instanceof Location){ //if element is a location object
+        let newLink=DOMPurify.sanitize(element.href);
+        element.href=newLink;//replacing old link with sanitised link
+        console.log("Element is a location object, converting to string ...: \n",
+        "\n here is the sanitised link",element.href);
+        //converting location object string and sanitising the location string
     }
     
 }
@@ -193,7 +206,8 @@ function observeWebpage(){ //this function works
                 || mutation.type==='subtree' ||mutation.type==='characterData') {
                 //if true function triggers
                 console.log("Changes detected in the web page");
-                window.runPrediction(window.htmlElements);
+                runPrediction(window.htmlElements);    
+                runPrediction(window.otherSources);
                     
             }
         });
