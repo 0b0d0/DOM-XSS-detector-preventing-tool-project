@@ -64,6 +64,24 @@ function searchForSources(sources,li){
     return li //stores the values in the array that stores node lists
 }
 
+let scriptElements=[]; //array to store script tags
+function getScriptTags(elementsArray){
+    const scriptTags=document.querySelectorAll("script"); //gets every script tag
+    for(x=0;x<scriptTags.length;x++){
+        //check if script tags content is short
+        let content =scriptTags[x].textContent; //stored as a string
+        if(!elementsArray.includes(scriptTags[x].outerHTML)){//prevent copies of the same data
+            if(content.length<=50){
+            elementsArray.push(scriptTags[x].outerHTML); //push script tag into elements array
+        } //insert full element with opening and closing tags as a string   
+        
+        }
+    }
+    return elementsArray; //stores the values in the array that stores node lists
+
+
+}
+
 //These values store the elemets that use the sources but the elements are stored in seperate arrays inside the one array
 
 //trying break down list into seperate list
@@ -96,6 +114,8 @@ const seperateHtmlArray=[];
 //the elements are seperate arrays to be analysed and the function combines the node lists into one ARRAY
 
 
+
+//will need to delete these detection functions because I AM using the ai modelt o detect DOM XSS
 /*trying tp get script tag becuase this is a hard source to check */
 function detectScriptsWithRegExp(){
     const scriptTags=document.querySelectorAll("script");
@@ -151,19 +171,33 @@ function detectSinksWithRegExp(sourceArray,sources){
 function prevention(element){//if dangerous label is found this function is called
     /*loop through each item in the source list*/
     //getting all
-    let allElements=document.querySelectorAll(htmlSources)//gets elements that use sources in the given variable
+    let allElements;
     let sanitizedHTML; //intialise variable
 
-    // if element is not a html DOM element
-    if (!(element instanceof HTMLElement)) {
-        console.log("This is not a DOM element",element);
-        console.log("Sanitizing element ...");
-        sanitizedHTML=DOMPurify.sanitize(element); //sanitise element
-        element=sanitizedHTML;//replace former element with sanitised element
-        console.log("sanitised element",element);
+    //using pattern to check if script tag is typed dodgy
+    const scriptTagPattern = /&lt;script\b[^&gt;]*&gt;([\s\S]*?)&lt;\/script&gt;|&lt;script\b[^&gt;]*&gt;[\s\S]*?&lt;\/script|&lt;script\b[^&gt;]*&gt;|<script\b[^>]*>([\s\S]*?)<\/script>|<script\b[^>]*>/i;
+    // if element is a string
+    if (typeof element === 'string') { 
+        if(scriptTagPattern.test(element)){// if a pattern found is true
+         let javaScriptTags=document.querySelectorAll('script'); // Get all script tags
+        javaScriptTags.forEach(script=>{
+            if(script.outerHTML===element){// if match is found with element update the value with sanitized tag
+                script.outerHTML=DOMPurify.sanitize(element);
+                console.log("Sanitized the script tag: ",script, " ",script.outerHTML);
+            }   
+        })
+        }else{ //if it does not match script tag pattern
+            console.log("This is not a DOM element",element);
+            console.log("Sanitizing element ...");
+            sanitizedHTML=DOMPurify.sanitize(element); //sanitise element
+            element=sanitizedHTML;//replace former element with sanitised element
+            console.log("sanitised element",element);
+        }
+        
     }
     
-    else if((element instanceof HTMLElement)){ // if it is a html DOM element
+    else if((element instanceof HTMLElement)){ // if it is a html DOM element should be for HTML events
+        allElements=document.querySelectorAll(htmlSources); //gets elements that use sources in the given variable
         console.log("The element is a DOM element: ",element);
         console.log("Sanitizing element ...");
         
@@ -188,6 +222,7 @@ function prevention(element){//if dangerous label is found this function is call
        
     }
     }
+    //this should be for the source in the otherSources array that is a location object
     else if(element instanceof Location){ //if element is a location object
         let newLink=DOMPurify.sanitize(element.href);
         element.href=newLink;//replacing old link with sanitised link
@@ -206,8 +241,13 @@ function observeWebpage(){ //this function works
                 || mutation.type==='subtree' ||mutation.type==='characterData') {
                 //if true function triggers
                 console.log("Changes detected in the web page");
-                runPrediction(window.htmlElements);    
-                runPrediction(window.otherSources);
+
+                htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO stores the values in the array that stores node lists(sub arrays)
+                htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);//stores the DOM elements of the webpage
+                scriptTag=getScriptTags(scriptElements); //store script tags
+
+                runPrediction(window.allSources);    
+    
                     
             }
         });
@@ -221,22 +261,28 @@ function observeWebpage(){ //this function works
     });
 }
 
+let htmlHolder;
+let htmlElements;
+let scriptTag;
 /*Where main program starts */
 async function main(){
     let allSources;//combing the two arrays with the sources
     
-    let htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO stores the values in the array that stores node lists(sub arrays)
-    let htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);//stores the DOM elements of the webpage
-    window.htmlElements=htmlElements; //make global
+     htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO stores the values in the array that stores node lists(sub arrays)
+     htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);//stores the DOM elements of the webpage
+     scriptTag=getScriptTags(scriptElements); //store script tags
+
     window.otherSources=otherSources.filter(item => item !== undefined);//make global and filter out undefined elements
+    window.scriptTag=scriptTag; //make global
+    window.htmlElements=htmlElements; //make global
     window.prevention=prevention;
-    observeWebpage();
     allSources=[...window.htmlElements,... window.otherSources];//use spread operator
     window.allSources=allSources;// make global
+
+    observeWebpage(); //observe for changes in web page
 }
 main();
 window.main=main;
-
 
 
 
