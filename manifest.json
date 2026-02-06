@@ -17,6 +17,7 @@
     "https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt",
     "https://github.com/yogsec/XSS-Payloads/blob/main/dom_based_xss_payloads.txt",
     "https://raw.githubusercontent.com/pgaijin66/XSS-Payloads/master/payload/payload.txt",
+    "https://raw.githubusercontent.com/payload-box/xss-payload-list/main/Payloads/All-In-One.txt",
     "storage"
 
 ],
@@ -27,10 +28,10 @@
         "js":[
         "javascript/purify.min.js",
         "javascript/tensorflow.js",
-        "javascript/domDetector.js",
+        "javascript/sourceFinder&prevention.js",
         "javascript/popUp.js",
         "javascript/getDataSets.js",
-        "javascript/ai_model.js"
+        "javascript/ai_model_detection.js"
       ]
     }
 ],
