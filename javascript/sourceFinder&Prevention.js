@@ -1,7 +1,3 @@
-/*sinks */
-const sinks=["alert","eval","fetch","document.cookie","document.write","prompt"
-];
-
 /*Sources wehre the attack occurs by placing the sink in the source
 [""] allows it look for each element that uses the source
 and it applies to jquery style selectors*/
@@ -17,34 +13,6 @@ const htmlSources = [ //query selector function returns elemets using this forma
     "[href]","[src]","[onclick]","[onload]","[onkeydown]","[onmousedown]","[onerror]",
     "[ondrag]","[oncopy]","[onmouseover]","[onloadstart]","[style]","[iframe]"          
 ];
-
-const plainHtmlSources=["href","src","onclick", "onload","onkeydown","onmousedown","onerror",
-    "ondrag","oncopy","onmouseoever","onloadstart","style","iframe"];
-
-
-/*regular expression for sinks to detect if a string is found */
-//using BOTH of them
-
-// Build the regex for sinks  
-const sinkPattern = sinks.map(sink => sink.replace(/([.*+?^${}()|[\]\\])/g, '\\$1')).join("|"); // Escape special characters
-
-// Consolidated regex for detecting XSS payloads with and without attribute names
-const htmlRegexPattern = new RegExp(
-    `(?:\\b(?:[a-zA-Z-]+)\\s*=\\s*)?["']?\\s*(?:(javascript|vbscript|data|file|livescript|about|blob|ftp):[^"'>]+|[^"'>]*)?[^"'>]*(${sinkPattern})`, 
-    'i'
-);
-
-
-const scriptTagsSinksRegex = new RegExp(
-    `\\b(?:${sinks.join("|")})\\s*\\(` +                                  
-    `([^()]*|\\([^()]*\\)|'[^']*'|"[^"]*")\\)|` +                       
-    `\\b(?:${sinks.join("|")})\\s*=\\s*([^;]*?)(?:;|$)|` +              
-    `\\b(?:${sinks.join("|")})\\s*\\+\\s*(['"])(.*?)(?:\\1|$)|` +      
-    `\\b(?:${sinks.join("|")})\\s*\\+\\s*([^\\s;]+)` +                 
-    `(?=[;\n]|$)`,                                                       
-    'gi'   
-);
-
 
 //these only store one array with node lists i want to make each source have its own seperate array to compare
 const foundHtmlSources=[]; 
@@ -78,8 +46,6 @@ function getScriptTags(elementsArray){
         }
     }
     return elementsArray; //stores the values in the array that stores node lists
-
-
 }
 
 //These values store the elemets that use the sources but the elements are stored in seperate arrays inside the one array
@@ -114,60 +80,6 @@ const seperateHtmlArray=[];
 //the elements are seperate arrays to be analysed and the function combines the node lists into one ARRAY
 
 
-
-//will need to delete these detection functions because I AM using the ai modelt o detect DOM XSS
-/*trying tp get script tag becuase this is a hard source to check */
-function detectScriptsWithRegExp(){
-    const scriptTags=document.querySelectorAll("script");
-    let x=0;
-    try{
-        scriptTags.forEach((script)=>{//check if script content is null and see if it matches regular expressions
-        //text context contains the syntax inside the script tags etc <script>console.log("bye")</script>
-        x++;
-        if(script.textContent!==""){ /*check for empty string*/
-            const matches=scriptTagsSinksRegex.test(script.textContent); /*For scrip tag*/
-            //.exec(script.textContent)
-            //matches[0]
-            
-            if(matches){
-                console.log("Payload found",matches,"\n"); //match is like test but it returns the part of the code that is suspicious
-                //encoding is done to prevent the dom payload from executing
-                encodeNow=btoa(String.fromCharCode(...new TextEncoder().encode(script.textContent)));
-                script.textContent=encodeNow;
-                console.log("Script tag text content after being encoded", script.textContent,"\n");
-        }}
-    })
-    }catch(error){
-        console.log("Error occured",error);
-    } 
-}
-
-
-//this needs to check for the value of the sources based on the array of xss sources
-//loop through each element and checks the event id attribute value
-function detectSinksWithRegExp(sourceArray,sources){
-    for(k=0;k<sourceArray.length;k++){
-        for(a=0;a<sources.length;a++){
-            try{
-            const attributeValue=sourceArray[k].getAttribute(sources[a]);//originally was meant to loop through teh source values
-                if(htmlRegexPattern.test(attributeValue)){ 
-                    //checking attribute value matches the pattern with the sinks regular expression 
-                    console.log("Found dom xss payload at",attributeValue,"in",sourceArray[k]);
-                    const encodedValue=btoa(attributeValue);
-                    
-                    //encoding is done to prevent the dom payload from executing and changing the original sourceArray value
-                    //trying to set the new attribute value in the DOM   
-                    sourceArray[k].setAttribute(sources[a],encodedValue);
-                    console.log("Element after the attribute value was encoded",sourceArray[k]);
-            }           
-        }catch(error){
-                console.error("Could not process",sourceArray[k],"Error: ",error);
-            }
-        }
-}
-}
-
-
 function prevention(element){//if dangerous label is found this function is called
     /*loop through each item in the source list*/
     //getting all
@@ -177,7 +89,7 @@ function prevention(element){//if dangerous label is found this function is call
     //using pattern to check if script tag is typed dodgy
     const scriptTagPattern = /&lt;script\b[^&gt;]*&gt;([\s\S]*?)&lt;\/script&gt;|&lt;script\b[^&gt;]*&gt;[\s\S]*?&lt;\/script|&lt;script\b[^&gt;]*&gt;|<script\b[^>]*>([\s\S]*?)<\/script>|<script\b[^>]*>/i;
     // if element is a string
-    if (typeof element === 'string') { 
+    if (typeof element === 'string') {//assuming string will only apply to script tags or any source that produces a string output
         if(scriptTagPattern.test(element)){// if a pattern found is true
          let javaScriptTags=document.querySelectorAll('script'); // Get all script tags
         javaScriptTags.forEach(script=>{
@@ -246,7 +158,7 @@ function observeWebpage(){ //this function works
                 htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);//stores the DOM elements of the webpage
                 scriptTag=getScriptTags(scriptElements); //store script tags
 
-                runPrediction(window.allSources);    
+                window.processPayloads(window.allSources,window.models);   //process elements function
     
                     
             }
@@ -276,13 +188,13 @@ async function main(){
     window.scriptTag=scriptTag; //make global
     window.htmlElements=htmlElements; //make global
     window.prevention=prevention;
-    allSources=[...window.htmlElements,... window.otherSources];//use spread operator
+    allSources=[...window.htmlElements,... window.otherSources,...scriptTag];//use spread operator
     window.allSources=allSources;// make global
 
     observeWebpage(); //observe for changes in web page
 }
-main();
-window.main=main;
+main(); //calling the function twice to intialise the variables in the function to be used in the other file
+window.main=main; //making it global
 
 
 
