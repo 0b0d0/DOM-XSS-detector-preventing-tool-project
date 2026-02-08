@@ -1,6 +1,4 @@
-/*This file is to be used to used for detection afor xss
-instead of using regular expression only for detection and encoding only for prevention*/
-/*if a function is async has has an asynchronus nature without the async the logic cannot work */
+/*This file is to be used to used for detection afor xss*/
 
 //Adding patterns to train the models
 const safePatterns = [
@@ -301,7 +299,6 @@ async function processPayloads(input,models){
     //iterate through each input in the array that will be predicted
     for(const inputData of inputDataTensors){
         const finalPrediction=await combineModels(models,inputData);//calls function which return value and //returns results from function
-        //console.log("Final prediction for payload: ",finalPrediction); //may not need to log the object
 
         //assign a categroy based on prediction
         //finalprediction as the parameter
@@ -323,7 +320,8 @@ async function processPayloads(input,models){
         }
     }
 }
-
+//making function global
+window.processPayloads=processPayloads;
 
 //making example array of payloads
 let arrayOfPayloads=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%72t(1)>">X</a','<img src=xss onerror=alert(1)>'];
@@ -342,12 +340,14 @@ async function runPrediction(input){
 
         await checkAndTrainModels(); // Wait for models to be trained
 
-        const models = await loadModels(); // Load models only once
+        const models = await loadModels(); // Load and stores models only once
         //console.log("Checking if this works", models);
+        //make models global
+        window.models=models;
         
         // Process payloads with the loaded models
         //await processPayloads(arrayOfPayloads, models);
-        await processPayloads(input, models);
+        await processPayloads(input, window.models);
         console.log("Processing complete. If any change in the web page occurs information will be logged.");
     }
         
