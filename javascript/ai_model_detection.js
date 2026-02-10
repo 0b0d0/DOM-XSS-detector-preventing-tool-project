@@ -34,7 +34,7 @@ const obfuscatedDangerousPatterns = new RegExp(
 
 arraysForData=['payloadDataset0','payloadDataset1','payloadDataset2','payloadDataset3'];
 arraysForModelInStorage=["model1","model2","model3","model4"];
-
+let counter=0;
 
 function getStoredData(item){ //if this is async it would wait for the promise of fetching all the data
     //using the key
@@ -312,19 +312,25 @@ async function processPayloads(input,models){
             //display dangerous payload found
             console.log("Dangerous payload found",originalPayload);
             window.prevention(originalPayload);//calls this function which is from another file
+            //add counter by 1 if something dangerous is found
+            window.counter++;
+
+            // Now save the updated counter to chrome.storage
+            chrome.storage.local.set({ counter: window.counter }, function() {
+                console.log("Counter saved to storage:", window.counter);
+            });
 
         }else if( classfication.label==="Safe"){
             console.log("Element is safe",originalPayload);
+
         }else if(classfication.label==="Neutral or Unknown",originalPayload){
             console.log("Cannot classify what this is",originalPayload);
         }
     }
+    
 }
 //making function global
 window.processPayloads=processPayloads;
-
-//making example array of payloads
-let arrayOfPayloads=['<a href="data:text/html;base64_,<svg/onload=\u0061&#x6C;&#101%72t(1)>">X</a','<img src=xss onerror=alert(1)>'];
 
 async function runPrediction(input){
     //console.log("Checking this function works",loadModels());
@@ -358,5 +364,4 @@ async function runPrediction(input){
 //calling main function
 runPrediction(window.allSources);    
 window.runPrediction=runPrediction; //make global
-
-
+window.counter=counter;
