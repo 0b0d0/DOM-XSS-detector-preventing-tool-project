@@ -4,8 +4,9 @@ and it applies to jquery style selectors*/
 
 //this rray contains commands that contain values
 const otherSources = [document.URL, document.documentURI, document.URLUnencoded, document.baseURI,
-     location, location.href, location.search, location.hash, location.pathname, document.cookie, 
+     location.href, location.search, location.hash, location.pathname, document.cookie, 
      document.referrer, window.name];
+     
 //most of the sources output data types that are strings
 //only one of them displays Location object
 
@@ -79,6 +80,13 @@ const seperateHtmlArray=[];
 }
 //the elements are seperate arrays to be analysed and the function combines the node lists into one ARRAY
 
+function replaceValuesInOtherSources(item){//returns the sanitised value in the array
+    let sanitisedVersion;
+    //get item of item in the array and replace it with sanitised version
+    sanitisedVersion=otherSources[otherSources.indexOf(item)]=DOMPurify.sanitize(item);
+    return sanitisedVersion;
+}
+
 
 function prevention(element){//if dangerous label is found this function is called
     /*loop through each item in the source list*/
@@ -89,7 +97,7 @@ function prevention(element){//if dangerous label is found this function is call
     //using pattern to check if script tag is typed dodgy
     const scriptTagPattern = /&lt;script\b[^&gt;]*&gt;([\s\S]*?)&lt;\/script&gt;|&lt;script\b[^&gt;]*&gt;[\s\S]*?&lt;\/script|&lt;script\b[^&gt;]*&gt;|<script\b[^>]*>([\s\S]*?)<\/script>|<script\b[^>]*>/i;
     // if element is a string
-    if (typeof element === 'string') {//assuming string will only apply to script tags or any source that produces a string output
+    if (typeof element ==='string'){
         if(scriptTagPattern.test(element)){// if a pattern found is true
          let javaScriptTags=document.querySelectorAll('script'); // Get all script tags
         javaScriptTags.forEach(script=>{
@@ -98,14 +106,15 @@ function prevention(element){//if dangerous label is found this function is call
                 console.log("Sanitized the script tag: ",script, " ",script.outerHTML);
             }   
         })
-        }else{ //if it does not match script tag pattern
-            console.log("This is not a DOM element",element);
-            console.log("Sanitizing element ...");
-            sanitizedHTML=DOMPurify.sanitize(element); //sanitise element
-            element=sanitizedHTML;//replace former element with sanitised element
-            console.log("sanitised element",element);
-        }
-        
+    }
+    else{ //if it is not a script tag then sanitize the element
+        console.log("Sanitised the string: ",DOMPurify.sanitize(element));
+    }
+    }
+    
+       
+    else if(otherSources.includes(element)){// if element is in the other sources array
+        console.log("Sanitized this element: ",replaceValuesInOtherSources(element));
     }
     
     else if((element instanceof HTMLElement)){ // if it is a html DOM element should be for HTML events
@@ -118,29 +127,20 @@ function prevention(element){//if dangerous label is found this function is call
         
         for(x=0;x<allElements.length;x++){//loop through allElements
             //need to sort this out cause i do not want a string being put in the new element i want a dom element
-        if(allElements[x].isEqualNode(element)){// if a match is found
-            //parse string to document object
-            const parseDoc=parser.parseFromString(DOMPurify.sanitize(element.outerHTML),"text/html");
-            //get elemets from parse documents body
-            const parsedElement=parseDoc.body.children; //get parsed element
-            
-            if(parsedElement.length>0){//check if parsedElement has any children
-                allElements[x].replaceWith(parsedElement);//replace the outer element
-                console.log("Element was replaced",allElements[x]);
-            } else if(parsedElement.length==0){
-                console.warn("Parsed element is empty, cannot replace: ",allElements[x]);
+            if(allElements[x].isEqualNode(element)){// if a match is found
+                //parse string to document object
+                const parseDoc=parser.parseFromString(DOMPurify.sanitize(element.outerHTML),"text/html");
+                //get elemets from parse documents body
+                const parsedElement=parseDoc.body.children; //get parsed element
+                
+                if(parsedElement.length>0){//check if parsedElement has any children
+                    allElements[x].replaceWith(parsedElement);//replace the outer element
+                    console.log("Element was replaced",allElements[x]);
+                } else if(parsedElement.length==0){
+                    console.warn("Parsed element is empty, cannot replace: ",allElements[x]);
+                }
             }
-        }
-       
     }
-    }
-    //this should be for the source in the otherSources array that is a location object
-    else if(element instanceof Location){ //if element is a location object
-        let newLink=DOMPurify.sanitize(element.href);
-        element.href=newLink;//replacing old link with sanitised link
-        console.log("Element is a location object, converting to string ...: \n",
-        "\n here is the sanitised link",element.href);
-        //converting location object string and sanitising the location string
     }
     
 }
@@ -152,11 +152,12 @@ function observeWebpage(){ //this function works
             if (mutation.type === 'childList' || mutation.type === 'attributes'
                 || mutation.type==='subtree' ||mutation.type==='characterData') {
                 //if true function triggers
-                console.log("Changes detected in the web page");
 
-                htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO stores the values in the array that stores node lists(sub arrays)
-                htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);//stores the DOM elements of the webpage
-                scriptTag=getScriptTags(scriptElements); //store script tags
+                // Update sources
+                // window command allows any window variable to used any where in the code
+                //so when the arrange sources is called any window varibale used from that function
+                //as a parameter for process payloads can still be used after the arrangeTheSources is called
+                arrangeTheSources();
 
                 window.processPayloads(window.allSources,window.models);   //process elements function
     
@@ -173,16 +174,16 @@ function observeWebpage(){ //this function works
     });
 }
 
+//done this so the variables are easier to access and change values when needed
 let htmlHolder;
 let htmlElements;
 let scriptTag;
-/*Where main program starts */
-async function main(){
-    let allSources;//combing the two arrays with the sources
-    
-     htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO stores the values in the array that stores node lists(sub arrays)
-     htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);//stores the DOM elements of the webpage
-     scriptTag=getScriptTags(scriptElements); //store script tags
+let allSources;//combing the two arrays with the sources
+
+function arrangeTheSources(){
+    htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO stores the values in the array that stores node lists(sub arrays)
+    htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);//stores the DOM elements of the webpage
+    scriptTag=getScriptTags(scriptElements); //store script tags
 
     window.otherSources=otherSources.filter(item => item !== undefined);//make global and filter out undefined elements
     window.scriptTag=scriptTag; //make global
@@ -191,6 +192,17 @@ async function main(){
     allSources=[...window.htmlElements,... window.otherSources,...scriptTag];//use spread operator
     window.allSources=allSources;// make global
 
+    // Now trying to display number of all the elemenets that were scanned based on all sources length
+
+    chrome.storage.local.set({ sourcesCounter: window.allSources.length }, function() {
+        console.log("Number of sources that have been analysed are saved to storage:", window.allSources.length);
+        //when the info is stored soething is logged
+        });//each time this function is called the value will refresh to become a new value
+}
+
+/*Where main program starts */
+async function main(){
+    arrangeTheSources();
     observeWebpage(); //observe for changes in web page
 }
 main(); //calling the function twice to intialise the variables in the function to be used in the other file
