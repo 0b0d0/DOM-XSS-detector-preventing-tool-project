@@ -69,11 +69,11 @@ const seperateHtmlArray=[];
             if(!container.includes(sourceHolder[z][y])){
                 //if container does not cotain this element add it inside
                 container.push(sourceHolder[z][y]);
-            } else if (container.includes(sourceHolder[z][y])){
+            } /*else if (container.includes(sourceHolder[z][y])){
                 var index=container.indexOf(sourceHolder[z][y]);
                 //remove item by splicing
                 container.splice(index,1); //removes element if already found in the array
-            }
+            }*/
         }
     }
     return container;
@@ -88,7 +88,7 @@ function replaceValuesInOtherSources(item){//returns the sanitised value in the 
 }
 
 
-function prevention(element){//if dangerous label is found this function is called
+async function prevention(element){//if dangerous label is found this function is called
     /*loop through each item in the source list*/
     //getting all
     let allElements;
@@ -106,20 +106,14 @@ function prevention(element){//if dangerous label is found this function is call
         })
     }
     
-    
-    
-       
     if(otherSources.includes(element)){// if element is in the other sources array
         console.log("Sanitized this element: ",replaceValuesInOtherSources(element));
     }
     
     else if((element instanceof HTMLElement || element instanceof SVGElement)){ // if it is a html DOM element, SVG Element or Location object
         allElements=document.querySelectorAll(htmlSources); //gets elements that use sources in the given variable
-        console.log("The element is a DOM element: ",element);
         console.log("Dealing with this element...");
-
         //loop through the attributes of the element
-        
         while (element.attributes.length > 0) {
             element.removeAttribute(element.attributes[0].name); // Remove the first attribute repeatedly
         }
@@ -183,13 +177,6 @@ async function arrangeTheSources(){
     allSources=[...window.htmlElements,... window.otherSources,...scriptTag];//use spread operator
     window.allSources=allSources;// make global
 
-    // Now trying to display number of all the elemenets that were scanned based on all sources length
-
-    chrome.storage.local.set({ sourcesCounter: window.allSources.length }, function() {
-        console.log("Number of sources that have been analysed are saved to storage:", window.allSources.length);
-        //when the info is stored soething is logged
-        });//each time this function is called the value will refresh to become a new value
-        
 }
 
 /*Where main program starts */
@@ -197,6 +184,13 @@ async function main(){
     await arrangeTheSources(); // wait for this to finish before calling next function
     runPrediction(window.allSources); // Call runPrediction with allSources
     observeWebpage(); //observe for changes in web page
+
+    // Now trying to display number of all the elemenets that were scanned based on all sources length
+    chrome.storage.local.set({ sourcesCounter: window.allSources.length }, function() {
+        console.log("Number of sources that have been analysed are saved to storage:", window.allSources.length);
+        //when the info is stored something is logged
+        });
+        //each time this function is called the value will refresh to become a new value
 }
 main(); //calling the function twice to intialise the variables in the function to be used in the other file
 
