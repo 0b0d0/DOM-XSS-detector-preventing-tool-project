@@ -58,31 +58,40 @@
 
         }); 
     };
-    function update(num){
+    function update(num,id){
            if(num==null){
-                alert("Num has no value")
+                alert("Element id is empty")
             }else{
-                document.getElementById('counter').innerHTML=num;
+                document.getElementById(id).innerHTML=num;
             }
         }
-    b3.onclick=function (){
-        
-        let previousValue=document.getElementById('counter').innerHTML;
+    b3.onclick= async function (){
+        let currentValue;
+        let previousValue;
+        previousValue=document.getElementById('counter').innerHTML;
 
         //get currecnt value from chrome storage insetad of local storage
-        chrome.storage.local.get(['counter'],function(result){
-            let currentValue=result.counter; //default 0 if not set
+        chrome.storage.local.get(['counter','sourcesCounter'],function(result){
+            currentValue=result.counter; //default 0 if not set
             if(currentValue!==previousValue){
-                update(currentValue);//update current value
-
-                //send message to popup if it is open
-                chrome.runtime.sendMessage({type:'UPDATE_COUNTER',counter:currentValue});
+                update(currentValue,'counter'); //update current value
+                //current value contains the number from chrome storage
             } else{
-                alert("Values are the same");
+                alert("Values are the same for first row");
             }
-        });
+
+            //handle sourceCounter in the same call back
+            previousValue=document.getElementById('counterTwo').innerHTML; //get value of inner HTML    
+            currentValue=result.sourcesCounter; //this is equal to the value stored in chrome storage
+            if(currentValue!==previousValue){
+                update(currentValue,'counterTwo'); //length of the array is passed
+                } else{
+                    alert("Values are the same for second row");
+                }
+            });
+
     }
-        
+
     });
 
     
