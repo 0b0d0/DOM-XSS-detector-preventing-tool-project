@@ -22,7 +22,7 @@ const foundHtmlSources=[];
 so i try it make easier to  manage
 
 it gets the elements that use the selected sources depending on the source array chosen*/
-function searchForSources(sources,li){
+async function searchForSources(sources,li){
     /*loop through each item in the source list*/
     //getting all
     let allElements;
@@ -34,7 +34,7 @@ function searchForSources(sources,li){
 }
 
 let scriptElements=[]; //array to store script tags
-function getScriptTags(elementsArray){
+async function getScriptTags(elementsArray){
     const scriptTags=document.querySelectorAll("script"); //gets every script tag
     for(x=0;x<scriptTags.length;x++){
         //check if script tags content is short
@@ -55,7 +55,7 @@ function getScriptTags(elementsArray){
 const seperateHtmlArray=[];
 
 //this functions combines the sources for each categratory into one array because the previous list contains sub lists
- function joinNodeLists(sourceHolder,container){
+ async function joinNodeLists(sourceHolder,container){
     //if it will called again i must make sure 
     // the same elements are not being checked every call back
 
@@ -93,12 +93,10 @@ function prevention(element){//if dangerous label is found this function is call
     //getting all
     let allElements;
     let sanitizedHTML; //intialise variable
-
-    //using pattern to check if script tag is typed dodgy
-    const scriptTagPattern = /&lt;script\b[^&gt;]*&gt;([\s\S]*?)&lt;\/script&gt;|&lt;script\b[^&gt;]*&gt;[\s\S]*?&lt;\/script|&lt;script\b[^&gt;]*&gt;|<script\b[^>]*>([\s\S]*?)<\/script>|<script\b[^>]*>/i;
-    // if element is a string
-    if (typeof element ==='string'){
-        if(scriptTagPattern.test(element)){// if a pattern found is true
+    const scriptTagPattern = /<script\b[^>]*>|<\/script>/i; // Regex for <script> or </script>
+    
+    // if element is a string AND matches the pattern
+    if( typeof element ==='string' && scriptTagPattern.test(element)){// if a pattern found is true
          let javaScriptTags=document.querySelectorAll('script'); // Get all script tags
         javaScriptTags.forEach(script=>{
             if(script.outerHTML===element){// if match is found with element update the value with sanitized tag
@@ -107,40 +105,31 @@ function prevention(element){//if dangerous label is found this function is call
             }   
         })
     }
-    else{ //if it is not a script tag then sanitize the element
-        console.log("Sanitised the string: ",DOMPurify.sanitize(element));
-    }
-    }
+    
+    
     
        
-    else if(otherSources.includes(element)){// if element is in the other sources array
+    if(otherSources.includes(element)){// if element is in the other sources array
         console.log("Sanitized this element: ",replaceValuesInOtherSources(element));
     }
     
-    else if((element instanceof HTMLElement)){ // if it is a html DOM element should be for HTML events
+    else if((element instanceof HTMLElement || element instanceof SVGElement)){ // if it is a html DOM element, SVG Element or Location object
         allElements=document.querySelectorAll(htmlSources); //gets elements that use sources in the given variable
         console.log("The element is a DOM element: ",element);
-        console.log("Sanitizing element ...");
+        console.log("Dealing with this element...");
+
+        //loop through the attributes of the element
         
-        //using DOMParser to convert string to DOM element
-        const parser=new DOMParser;
-        
-        for(x=0;x<allElements.length;x++){//loop through allElements
-            //need to sort this out cause i do not want a string being put in the new element i want a dom element
-            if(allElements[x].isEqualNode(element)){// if a match is found
-                //parse string to document object
-                const parseDoc=parser.parseFromString(DOMPurify.sanitize(element.outerHTML),"text/html");
-                //get elemets from parse documents body
-                const parsedElement=parseDoc.body.children; //get parsed element
-                
-                if(parsedElement.length>0){//check if parsedElement has any children
-                    allElements[x].replaceWith(parsedElement);//replace the outer element
-                    console.log("Element was replaced",allElements[x]);
-                } else if(parsedElement.length==0){
-                    console.warn("Parsed element is empty, cannot replace: ",allElements[x]);
-                }
-            }
-    }
+        while (element.attributes.length > 0) {
+            element.removeAttribute(element.attributes[0].name); // Remove the first attribute repeatedly
+        }
+        console.log("Sanitised element: ", element);
+
+        // no match needs to be done cause it is being done on DOM nodes
+        //this means there is no need to check for equality
+        //and any changes will change the original node
+               
+     
     }
     
 }
@@ -180,14 +169,16 @@ let htmlElements;
 let scriptTag;
 let allSources;//combing the two arrays with the sources
 
-function arrangeTheSources(){
-    htmlHolder=searchForSources(htmlSources,foundHtmlSources); //THIS ALSO stores the values in the array that stores node lists(sub arrays)
-    htmlElements=joinNodeLists(htmlHolder,seperateHtmlArray);//stores the DOM elements of the webpage
-    scriptTag=getScriptTags(scriptElements); //store script tags
+async function arrangeTheSources(){
+    htmlHolder=await searchForSources(htmlSources,foundHtmlSources); //THIS ALSO stores the values in the array that stores node lists(sub arrays)
+    htmlElements=await joinNodeLists(htmlHolder,seperateHtmlArray);//stores the DOM elements of the webpage
+    scriptTag=await getScriptTags(scriptElements); //store script tags
 
     window.otherSources=otherSources.filter(item => item !== undefined);//make global and filter out undefined elements
     window.scriptTag=scriptTag; //make global
+    
     window.htmlElements=htmlElements; //make global
+    
     window.prevention=prevention;
     allSources=[...window.htmlElements,... window.otherSources,...scriptTag];//use spread operator
     window.allSources=allSources;// make global
@@ -198,15 +189,16 @@ function arrangeTheSources(){
         console.log("Number of sources that have been analysed are saved to storage:", window.allSources.length);
         //when the info is stored soething is logged
         });//each time this function is called the value will refresh to become a new value
+        
 }
 
 /*Where main program starts */
 async function main(){
-    arrangeTheSources();
+    await arrangeTheSources(); // wait for this to finish before calling next function
+    runPrediction(window.allSources); // Call runPrediction with allSources
     observeWebpage(); //observe for changes in web page
 }
 main(); //calling the function twice to intialise the variables in the function to be used in the other file
-window.main=main; //making it global
 
 
 
