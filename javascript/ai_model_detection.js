@@ -282,7 +282,7 @@ async function processPayloads(input,models){
     //return tf.tensor2d means a new tensor object is returned 
     const inputDataTensors = input.map(payload => { //loops through each item
     if (typeof payload === 'string') {//is the variable a string
-        if(payload.length!==0){// if the payload is not empty
+        if(payload.length!==0 && payload!==""){// if the payload is not empty
             return tf.tensor2d([[payload.length, payload.split(/\s+/).length]]);
         //this return statement allows predictions to be done on an element that is a string
         }
@@ -295,34 +295,30 @@ async function processPayloads(input,models){
     }
     else {
         console.error("Invalid:", payload);
-        //return tf.tensor2d([[0, 0]]); // Or handle as appropriate
     }
     }).filter(tensor => tensor !== undefined);//filtering out undefined values
     //inputDataTensors returns an array containing 2D tensors
 
+
     //iterate through each input in the array that will be predicted
     for(const inputData of inputDataTensors){
-        const finalPrediction=await combineModels(models,inputData);//calls function which return value and //returns results from function
+        let finalPrediction=await combineModels(models,inputData);//calls function which return value and //returns results from function
 
         //assign a categroy based on prediction
         //finalprediction as the parameter
-        const classfication=assignCategory(finalPrediction);
+        let classfication=assignCategory(finalPrediction);
         //get original payload
-        const originalPayload=input[inputDataTensors.indexOf(inputData)];//get index of value
-
+        let originalPayload=input[inputDataTensors.indexOf(inputData)];//get index of value
+        
         //checks if the data matches one of these labels
 
         if(classfication.label==="Dangerous"){ //awaits for promise then checks
             //display dangerous payload found
             console.log("Dangerous payload found",originalPayload);
-            window.prevention(originalPayload);//calls this function which is from another file
+            await window.prevention(originalPayload);//calls this function which is from another file
             //add counter by 1 if something dangerous is found
             window.counter++;
 
-            // Now save the updated counter to chrome.storage
-            chrome.storage.local.set({ counter: window.counter }, function() {
-                console.log("Number of detected XSS payloads have been saved to storage:", window.counter, ); //when the info is stored soething is logged
-            }); //each time this function is called the value will refresh to become a new value
 
         }else if( classfication.label==="Safe"){
             console.log("Element is safe",originalPayload);
@@ -331,6 +327,10 @@ async function processPayloads(input,models){
             console.log("Cannot classify what this is",originalPayload);
         }
     }
+    // Now save the updated counter to chrome.storage
+        chrome.storage.local.set({ counter: window.counter }, function() {
+            console.log("Number of detected XSS payloads have been saved to storage:", window.counter, ); //when the info is stored soething is logged
+        }); //each time this function is called the value will refresh to become a new value
     
 }
 //making function global
@@ -340,7 +340,6 @@ async function runPrediction(input){
     //console.log("Checking this function works",loadModels());
     //length of datasets is equal to length of models
     try {
-        console.log("Seeing what is in input: ", input);
         if(input.length==0){//if there is no data do nothing
         console.warn("There is no data to process");
     }else{
