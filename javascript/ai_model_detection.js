@@ -268,7 +268,11 @@ function domElementToString(element){
         return element.outerHTML; //outer html returns a string
     }else if(element instanceof Location){//if it is a string return
         return element.href;
-    }else{
+    }else if(element instanceof SVGElement){//check if it a svg element
+        const converter= new XMLSerializer(); //define string converter
+        return converter.serializeToString(element); //return string version of svg element
+    }
+    else{
         return ""; //return empty string for invalid input
     }   
     } 
@@ -283,7 +287,7 @@ async function processPayloads(input,models){
         //this return statement allows predictions to be done on an element that is a string
         }
     } 
-    else if(payload instanceof HTMLElement || payload instanceof Location){//checking if it is a  DOM element
+    else if(payload instanceof HTMLElement || payload instanceof Location || payload instanceof SVGElement){//checking if it is a  DOM element
         let payloadString=domElementToString(payload);//get html string
         return tf.tensor2d([[payloadString.length, payloadString.split(/\s+/).length]]);
          
@@ -317,8 +321,8 @@ async function processPayloads(input,models){
 
             // Now save the updated counter to chrome.storage
             chrome.storage.local.set({ counter: window.counter }, function() {
-                console.log("Counter saved to storage:", window.counter);
-            });
+                console.log("Number of detected XSS payloads have been saved to storage:", window.counter, ); //when the info is stored soething is logged
+            }); //each time this function is called the value will refresh to become a new value
 
         }else if( classfication.label==="Safe"){
             console.log("Element is safe",originalPayload);
@@ -336,12 +340,11 @@ async function runPrediction(input){
     //console.log("Checking this function works",loadModels());
     //length of datasets is equal to length of models
     try {
-        //calling the function from ther file
-        await window.main(); // called to use the domDetector file before the other function in this file are called
-
+        console.log("Seeing what is in input: ", input);
         if(input.length==0){//if there is no data do nothing
         console.warn("There is no data to process");
     }else{
+       
         await window.fetchAllData(); // Using await for cleaner promise handling
 
         await checkAndTrainModels(); // Wait for models to be trained
@@ -361,7 +364,6 @@ async function runPrediction(input){
         console.error("Error during processing:", error); // Handle errors
     }
 }
-//calling main function
-runPrediction(window.allSources);    
+   
 window.runPrediction=runPrediction; //make global
 window.counter=counter;
