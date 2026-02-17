@@ -69,11 +69,7 @@ const seperateHtmlArray=[];
             if(!container.includes(sourceHolder[z][y])){
                 //if container does not cotain this element add it inside
                 container.push(sourceHolder[z][y]);
-            } /*else if (container.includes(sourceHolder[z][y])){
-                var index=container.indexOf(sourceHolder[z][y]);
-                //remove item by splicing
-                container.splice(index,1); //removes element if already found in the array
-            }*/
+            } 
         }
     }
     return container;
@@ -88,42 +84,42 @@ function replaceValuesInOtherSources(item){//returns the sanitised value in the 
 }
 
 
-async function prevention(element){//if dangerous label is found this function is called
+async function prevention(elements){//if dangerous label is found this function is called
     /*loop through each item in the source list*/
     //getting all
     let allElements;
     let sanitizedHTML; //intialise variable
     const scriptTagPattern = /<script\b[^>]*>|<\/script>/i; // Regex for <script> or </script>
     
-    // if element is a string AND matches the pattern
-    if( typeof element ==='string' && scriptTagPattern.test(element)){// if a pattern found is true
-         let javaScriptTags=document.querySelectorAll('script'); // Get all script tags
-        javaScriptTags.forEach(script=>{
-            if(script.outerHTML===element){// if match is found with element update the value with sanitized tag
-                script.outerHTML=DOMPurify.sanitize(element);
-                console.log("Sanitized the script tag: ",script, " ",script.outerHTML);
-            }   
-        })
-    }
-    
-    if(otherSources.includes(element)){// if element is in the other sources array
+    if(elements.length===0){
+        console.log("No dangerous XSS commands found");
+    }else{
+        for(let element of elements){//loop through array of dangerous commmands
+        if(otherSources.includes(element)){// if element is in the other sources array
         console.log("Sanitized this element: ",replaceValuesInOtherSources(element));
     }
     
     else if((element instanceof HTMLElement || element instanceof SVGElement)){ // if it is a html DOM element, SVG Element or Location object
-        allElements=document.querySelectorAll(htmlSources); //gets elements that use sources in the given variable
         console.log("Dealing with this element...");
-        //loop through the attributes of the element
-        while (element.attributes.length > 0) {
-            element.removeAttribute(element.attributes[0].name); // Remove the first attribute repeatedly
-        }
-        console.log("Sanitised element: ", element);
+        Array.from(element.attributes).forEach(attr => {//loop through each attribute
+            element.removeAttribute(attr.name);
+        });
+        console.log("All attributes removed from the element.");
 
         // no match needs to be done cause it is being done on DOM nodes
         //this means there is no need to check for equality
         //and any changes will change the original node
                
-     
+    }else{ //if both of those statements are false assuming it is a string and contains javascript
+        let javaScriptTags=document.querySelectorAll('script'); // Get all script tags
+        javaScriptTags.forEach(script=>{
+            if(script.outerHTML.trim()===element.trim()){// if match is found with element update the value with sanitized tag
+                script.outerHTML=DOMPurify.sanitize(element.trim()); //sanitisation fremoves the script tag
+                console.log("Sanitized the script tag by removing it: ",script);
+            }   //trim removes whitespace
+        })
+    }
+    }
     }
     
 }
@@ -135,16 +131,8 @@ function observeWebpage(){ //this function works
             if (mutation.type === 'childList' || mutation.type === 'attributes'
                 || mutation.type==='subtree' ||mutation.type==='characterData') {
                 //if true function triggers
-
-                // Update sources
-                // window command allows any window variable to used any where in the code
-                //so when the arrange sources is called any window varibale used from that function
-                //as a parameter for process payloads can still be used after the arrangeTheSources is called
-                arrangeTheSources();
-
-                window.processPayloads(window.allSources,window.models);   //process elements function
-    
-                    
+                console.log("Change in the web page source code has been detected");
+            
             }
         });
     });
@@ -168,7 +156,8 @@ async function arrangeTheSources(){
     htmlElements=await joinNodeLists(htmlHolder,seperateHtmlArray);//stores the DOM elements of the webpage
     scriptTag=await getScriptTags(scriptElements); //store script tags
 
-    window.otherSources=otherSources.filter(item => item !== undefined);//make global and filter out undefined elements
+    //remove undefined and empty
+    window.otherSources=otherSources.filter(item => item !== undefined && item!=='');//make global and filter out undefined elements
     window.scriptTag=scriptTag; //make global
     
     window.htmlElements=htmlElements; //make global
@@ -182,7 +171,7 @@ async function arrangeTheSources(){
 /*Where main program starts */
 async function main(){
     await arrangeTheSources(); // wait for this to finish before calling next function
-    runPrediction(window.allSources); // Call runPrediction with allSources
+    window.runPrediction(window.allSources); // Call runPrediction with allSources
     observeWebpage(); //observe for changes in web page
 
     // Now trying to display number of all the elemenets that were scanned based on all sources length
@@ -194,6 +183,8 @@ async function main(){
 }
 main(); //calling the function twice to intialise the variables in the function to be used in the other file
 
+// Set an interval to call the main function every 2 minutes (120000 milliseconds)
+setInterval(main, 120000);
 
 
 
