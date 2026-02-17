@@ -84,7 +84,7 @@ function replaceValuesInOtherSources(item){//returns the sanitised value in the 
 }
 
 
-async function prevention(elements){//if dangerous label is found this function is called
+function prevention(elements){//if dangerous label is found this function is called
     /*loop through each item in the source list*/
     //getting all
     let allElements;
@@ -185,6 +185,7 @@ main(); //calling the function twice to intialise the variables in the function 
 
 // Set an interval to call the main function every 2 minutes (120000 milliseconds)
 setInterval(main, 120000);
+
 
 
 
