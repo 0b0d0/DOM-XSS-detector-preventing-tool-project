@@ -34,7 +34,7 @@ const obfuscatedDangerousPatterns = new RegExp(
 
 arraysForData=['payloadDataset0','payloadDataset1','payloadDataset2','payloadDataset3'];
 arraysForModelInStorage=["model1","model2","model3","model4"];
-let counter=0;
+
 
 function getStoredData(item){ //if this is async it would wait for the promise of fetching all the data
     //using the key
@@ -316,9 +316,7 @@ async function processPayloads(input,models){
         if(classfication.label==="Dangerous"){ //awaits for promise then checks
             //display dangerous payload found
             console.log("Dangerous payload found",originalPayload);
-            //await window.prevention(originalPayload);//calls this function which is from another file
-            //add counter by 1 if something dangerous is found
-            window.counter++;
+        
             //push it into array to pass onto next function
             dangerousPayloads.push(originalPayload);
 
@@ -330,8 +328,8 @@ async function processPayloads(input,models){
         }
     }
     // Now save the updated counter to chrome.storage
-        chrome.storage.local.set({ counter: window.counter }, function() {
-            console.log("Number of detected XSS payloads have been saved to storage:", window.counter, ); //when the info is stored soething is logged
+        chrome.storage.local.set({ counter: dangerousPayloads.length }, function() {
+            console.log("Number of detected XSS payloads have been saved to storage:", dangerousPayloads.length, ); //when the info is stored soething is logged
         }); //each time this function is called the value will refresh to become a new value
     
         window.dangerousPayloads=dangerousPayloads;
@@ -371,5 +369,3 @@ async function runPrediction(input){
 }
    
 window.runPrediction=runPrediction; //make global
-window.counter=counter;
-
