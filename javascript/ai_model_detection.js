@@ -361,7 +361,7 @@ async function runPrediction(input){
         
         // Process payloads with the loaded models
         await processPayloads(input, window.models);
-        await window.prevention(window.dangerousPayloads)//call prevention function after it is done
+        window.prevention(window.dangerousPayloads)//call prevention function after it is done
         console.log("Processing complete. If any change in the web page occurs information will be logged.");
     }
         
@@ -372,3 +372,4 @@ async function runPrediction(input){
    
 window.runPrediction=runPrediction; //make global
 window.counter=counter;
+
