@@ -190,7 +190,8 @@ let models=[];
 // i know the length of the model array
 async function loadModels(){
     if(models.length>0){
-        return "Models have already been added";
+        console.log("Models have already been added");
+        return models; //when the main function is called again
     }else{
         for(z=1;z<4;z++){
         const modelData=JSON.parse(localStorage.getItem("model"+z));
@@ -299,9 +300,9 @@ async function processPayloads(input,models){
     }).filter(tensor => tensor !== undefined);//filtering out undefined values
     //inputDataTensors returns an array containing 2D tensors
 
-
+    let dangerousPayloads=[];
     //iterate through each input in the array that will be predicted
-    for(const inputData of inputDataTensors){
+    for(const inputData of inputDataTensors){ //inputDataTensor length is based on input length
         let finalPrediction=await combineModels(models,inputData);//calls function which return value and //returns results from function
 
         //assign a categroy based on prediction
@@ -315,15 +316,16 @@ async function processPayloads(input,models){
         if(classfication.label==="Dangerous"){ //awaits for promise then checks
             //display dangerous payload found
             console.log("Dangerous payload found",originalPayload);
-            await window.prevention(originalPayload);//calls this function which is from another file
+            //await window.prevention(originalPayload);//calls this function which is from another file
             //add counter by 1 if something dangerous is found
             window.counter++;
-
+            //push it into array to pass onto next function
+            dangerousPayloads.push(originalPayload);
 
         }else if( classfication.label==="Safe"){
             console.log("Element is safe",originalPayload);
 
-        }else if(classfication.label==="Neutral or Unknown",originalPayload){
+        }else if(classfication.label==="Neutral or Unknown"){
             console.log("Cannot classify what this is",originalPayload);
         }
     }
@@ -332,7 +334,11 @@ async function processPayloads(input,models){
             console.log("Number of detected XSS payloads have been saved to storage:", window.counter, ); //when the info is stored soething is logged
         }); //each time this function is called the value will refresh to become a new value
     
+        window.dangerousPayloads=dangerousPayloads;
+        //once loop is done run prevention
+        //window.prevention(dangerousPayloads)
 }
+
 //making function global
 window.processPayloads=processPayloads;
 
@@ -354,8 +360,8 @@ async function runPrediction(input){
         window.models=models;
         
         // Process payloads with the loaded models
-        //await processPayloads(arrayOfPayloads, models);
         await processPayloads(input, window.models);
+        await window.prevention(window.dangerousPayloads)//call prevention function after it is done
         console.log("Processing complete. If any change in the web page occurs information will be logged.");
     }
         
