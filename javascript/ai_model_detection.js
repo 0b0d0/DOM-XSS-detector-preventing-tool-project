@@ -301,6 +301,7 @@ async function processPayloads(input,models){
     //inputDataTensors returns an array containing 2D tensors
 
     let dangerousPayloads=[];
+    let safeSources=[];
     //iterate through each input in the array that will be predicted
     for(const inputData of inputDataTensors){ //inputDataTensor length is based on input length
         let finalPrediction=await combineModels(models,inputData);//calls function which return value and //returns results from function
@@ -322,14 +323,21 @@ async function processPayloads(input,models){
 
         }else if( classfication.label==="Safe"){
             console.log("Element is safe",originalPayload);
-
+            //push sources into safe sources array to get number of safe sources found could be true and false positives
+            //same for dangerous payloads
+            safeSources.push(originalPayload);
         }else if(classfication.label==="Neutral or Unknown"){
             console.log("Cannot classify what this is",originalPayload);
+            
         }
     }
     // Now save the updated counter to chrome.storage
         chrome.storage.local.set({ counter: dangerousPayloads.length }, function() {
             console.log("Number of detected XSS payloads have been saved to storage:", dangerousPayloads.length, ); //when the info is stored soething is logged
+        }); //each time this function is called the value will refresh to become a new value
+
+        chrome.storage.local.set({ safeSourcesCounter: safeSources.length }, function() {
+            console.log("Number of detected safe sources have been saved to storage:", safeSources.length, ); //when the info is stored soething is logged
         }); //each time this function is called the value will refresh to become a new value
     
         window.dangerousPayloads=dangerousPayloads;
