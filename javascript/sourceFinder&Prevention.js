@@ -5,14 +5,23 @@ and it applies to jquery style selectors*/
 //this rray contains commands that contain values
 const otherSources = [document.URL, document.documentURI, document.URLUnencoded, document.baseURI,
      location.href, location.search, location.hash, location.pathname, document.cookie, 
-     document.referrer, window.name];
+     document.referrer, window.name,document.title,window.navigator.userAgent];
      
 //most of the sources output data types that are strings
 //only one of them displays Location object
 
-const htmlSources = [ //query selector function returns elemets using this format [source]
-    "[href]","[src]","[onclick]","[onload]","[onkeydown]","[onmousedown]","[onerror]",
-    "[ondrag]","[oncopy]","[onmouseover]","[onloadstart]","[style]","[iframe]"          
+const htmlSources = [ //query selector function returns elements using this format [source]
+    "[href]", "[src]", "[onclick]", "[onload]", "[onkeydown]", "[onmousedown]", "[onerror]",
+    "[ondrag]", "[oncopy]", "[onmouseover]", "[onloadstart]", "[style]", "[iframe]",
+    "[ondblclick]", "[onmouseup]", "[onmousemove]", "[onmouseout]", "[onkeypress]", 
+    "[onfocus]", "[onblur]", "[onsubmit]", "[onchange]", "[onselect]", "[oninput]", 
+    "[onresize]", "[onscroll]", "[ontouchstart]", "[ontouchend]", "[ontouchmove]", 
+    "[onwheel]", "[onpointerdown]", "[onpointerup]", "[onpointermove]", 
+    "[onpointerover]", "[onpointerout]", "[onanimationstart]", "[onanimationend]", 
+    "[onanimationiteration]", "[ontransitionend]", "[onplay]", "[onpause]", 
+    "[onended]", "[onvolumechange]", "[ontimeupdate]", "[onreset]", 
+    "[ondragstart]", "[ondragend]", "[ondragenter]", "[ondragover]", 
+    "[ondragleave]", "[ondrop]", "[oncontextmenu]", "[onpaste]"
 ];
 
 //these only store one array with node lists i want to make each source have its own seperate array to compare
@@ -114,7 +123,7 @@ function prevention(elements){//if dangerous label is found this function is cal
         let javaScriptTags=document.querySelectorAll('script'); // Get all script tags
         javaScriptTags.forEach(script=>{
             if(script.outerHTML.trim()===element.trim()){// if match is found with element update the value with sanitized tag
-                script.outerHTML=DOMPurify.sanitize(element.trim()); //sanitisation fremoves the script tag
+                script.outerHTML=DOMPurify.sanitize(element.trim()); //sanitisation removes the script tag
                 console.log("Sanitized the script tag by removing it: ",script);
             }   //trim removes whitespace
         })
@@ -185,7 +194,6 @@ main(); //calling the function twice to intialise the variables in the function 
 
 // Set an interval to call the main function every 2 minutes (120000 milliseconds)
 setInterval(main, 120000);
-
 
 
 
