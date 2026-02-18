@@ -1,0 +1,1 @@
+This product was developed to scan the web pages source code and run through each element to check for any DOM XSS payloads and remove them or sanitise them. This web extension was made to only work on browsers that use Firefox as its source code.
