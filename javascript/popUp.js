@@ -71,7 +71,7 @@
         previousValue=document.getElementById('counter').innerHTML;
 
         //get currecnt value from chrome storage insetad of local storage
-        chrome.storage.local.get(['counter','sourcesCounter'],function(result){
+        chrome.storage.local.get(['counter','sourcesCounter','safeSourcesCounter'],function(result){
             currentValue=result.counter; //default 0 if not set
             if(currentValue!==previousValue){
                 update(currentValue,'counter'); //update current value
@@ -88,7 +88,18 @@
                 } else{
                     alert("Values are the same for second row");
                 }
+
+            previousValue=document.getElementById('counterThree').innerHTML; //get value of inner HTML    
+            currentValue=result.safeSourcesCounter; //this is equal to the value stored in chrome storage
+            if(currentValue!==previousValue){
+                update(currentValue,'counterThree'); //length of the array is passed
+                } else{
+                    alert("Values are the same for third row");
+                }
+
             });
+
+            
 
     }
 
