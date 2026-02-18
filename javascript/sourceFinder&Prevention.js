@@ -49,7 +49,7 @@ async function getScriptTags(elementsArray){
         //check if script tags content is short
         let content =scriptTags[x].textContent; //stored as a string
         if(!elementsArray.includes(scriptTags[x].outerHTML)){//prevent copies of the same data
-            if(content.length<=50){
+            if(content.length<=100){
             elementsArray.push(scriptTags[x].outerHTML); //push script tag into elements array
         } //insert full element with opening and closing tags as a string   
         
