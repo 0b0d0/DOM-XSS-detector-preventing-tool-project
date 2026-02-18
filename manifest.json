@@ -28,7 +28,7 @@
         "js":[
         "javascript/purify.min.js",
         "javascript/tensorflow.js",
-        "javascript/sourceFinder&prevention.js",
+        "javascript/sourceFinder&Prevention.js",
         "javascript/popUp.js",
         "javascript/getDataSets.js",
         "javascript/ai_model_detection.js"
@@ -48,3 +48,4 @@
   "default_popup": "interface.html"
 }
 }
+
