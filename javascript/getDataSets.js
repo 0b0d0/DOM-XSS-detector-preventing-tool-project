@@ -20,14 +20,14 @@ async function getDataSet(url,num){//async makes function return a promise
         
         
         const data=await response.text();//await for data fetched from website
-        console.log("Successfully fetched payload dataset from", url[num]);
         
         //check if item already exists in storage
         const itemExists=localStorage.getItem('payloadDataset'+num);
 
         if(itemExists){
-            console.log("The dataset that was fetched is already in storage dataset number",num );
-        }else{
+            console.log("The dataset is already in storage dataset number",num );
+        }else{//if item does not exist
+            console.log("Successfully fetched dataset from", url[num]);
             // Split the string into a list
             payloadDataSet = data.split("\n").filter(Boolean); // Removes empty lines
             
@@ -48,13 +48,16 @@ async function getDataSet(url,num){//async makes function return a promise
 //This checks if the data has been fetched and if true displays it as been fetched
 //then function triggers event when a promise is (fulfilled or rejected) - syntax .then(fulfilled,rejected)
 
+let promiseForData=[]; //will store a list of promises
 async function fetchAllData(){// Made this easier to manage 
-    for(let a=0;a<4;a++){//added 3 cause i know the length of website links and websitlinks.length only gave dataset of first item
-        const payloadDataset= await getDataSet(websiteLinks,a);//await for promise which is data fetched from website
-        if (payloadDataset) {
-            console.log("Dataset", a, "has been retrieved.");
-        }
+    for(let a=0;a<websiteLinks.length;a++){//added 3 cause i know the length of website links and websitlinks.length only gave dataset of first item
+        let payloadDataset= await getDataSet(websiteLinks,a);//await for promise which is data fetched from website
+        promiseForData.push(payloadDataset);
     }
+    if(Promise.all(promiseForData)){// if all the promises have not failed
+        console.log("All datasets have been retrieved ! ");
+    }
+
 }
 
 //making function global
