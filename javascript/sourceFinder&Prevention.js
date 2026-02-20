@@ -12,18 +12,9 @@ const otherSources = [document.URL, document.documentURI, document.URLUnencoded,
 
 const htmlSources = [ //query selector function returns elements using this format [source]
     "[href]", "[src]", "[onclick]", "[onload]", "[onkeydown]", "[onmousedown]", "[onerror]",
-    "[ondrag]", "[oncopy]", "[onmouseover]", "[onloadstart]", "[style]", "[iframe]",
-    "[ondblclick]", "[onmouseup]", "[onmousemove]", "[onmouseout]", "[onkeypress]", 
-    "[onfocus]", "[onblur]", "[onsubmit]", "[onchange]", "[onselect]", "[oninput]", 
-    "[onresize]", "[onscroll]", "[ontouchstart]", "[ontouchend]", "[ontouchmove]", 
-    "[onwheel]", "[onpointerdown]", "[onpointerup]", "[onpointermove]", 
-    "[onpointerover]", "[onpointerout]", "[onanimationstart]", "[onanimationend]", 
-    "[onanimationiteration]", "[ontransitionend]", "[onplay]", "[onpause]", 
-    "[onended]", "[onvolumechange]", "[ontimeupdate]", "[onreset]", 
-    "[ondragstart]", "[ondragend]", "[ondragenter]", "[ondragover]", 
-    "[ondragleave]", "[ondrop]", "[oncontextmenu]", "[onpaste]"
+    "[ondrag]", "[oncopy]", "[onmouseover]", "[onloadstart]","[onfocus]", "[onsubmit]", "[onchange]",
+     "[onpaste]", "[oninput]", "[oncontextmenu]"
 ];
-
 //these only store one array with node lists i want to make each source have its own seperate array to compare
 const foundHtmlSources=[]; 
 
@@ -194,6 +185,7 @@ main(); //calling the function twice to intialise the variables in the function 
 
 // Set an interval to call the main function every 2 minutes (120000 milliseconds)
 setInterval(main, 120000);
+
 
 
 
