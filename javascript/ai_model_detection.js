@@ -267,8 +267,6 @@ function domElementToString(element){
     if(element instanceof HTMLElement){// is it a html element
             //return the full element tag
         return element.outerHTML; //outer html returns a string
-    }else if(element instanceof Location){//if it is a string return
-        return element.href;
     }else if(element instanceof SVGElement){//check if it a svg element
         const converter= new XMLSerializer(); //define string converter
         return converter.serializeToString(element); //return string version of svg element
@@ -310,6 +308,7 @@ async function processPayloads(input,models){
         //finalprediction as the parameter
         let classfication=assignCategory(finalPrediction);
         //get original payload
+        
         let originalPayload=input[inputDataTensors.indexOf(inputData)];//get index of value
         
         //checks if the data matches one of these labels
