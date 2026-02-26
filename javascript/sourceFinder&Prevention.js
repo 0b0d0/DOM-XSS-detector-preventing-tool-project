@@ -2,19 +2,15 @@
 [""] allows it look for each element that uses the source
 and it applies to jquery style selectors*/
 
-//this rray contains commands that contain values
-const otherSources = [document.URL, document.documentURI, document.URLUnencoded, document.baseURI,
-     location.href, location.search, location.hash, location.pathname, document.cookie, 
-     document.referrer, window.name,document.title,window.navigator.userAgent];
-     
 //most of the sources output data types that are strings
 //only one of them displays Location object
 
 const htmlSources = [ //query selector function returns elements using this format [source]
     "[href]", "[src]", "[onclick]", "[onload]", "[onkeydown]", "[onmousedown]", "[onerror]",
     "[ondrag]", "[oncopy]", "[onmouseover]", "[onloadstart]","[onfocus]", "[onsubmit]", "[onchange]",
-     "[onpaste]", "[oninput]", "[oncontextmenu]"
+     "[onpaste]", "[oninput]", "[oncontextmenu]", "[onblur]", "[style]","[onscroll]"
 ];
+
 //these only store one array with node lists i want to make each source have its own seperate array to compare
 const foundHtmlSources=[]; 
 
@@ -87,24 +83,18 @@ function replaceValuesInOtherSources(item){//returns the sanitised value in the 
 function prevention(elements){//if dangerous label is found this function is called
     /*loop through each item in the source list*/
     //getting all
-    let allElements;
-    let sanitizedHTML; //intialise variable
-    const scriptTagPattern = /<script\b[^>]*>|<\/script>/i; // Regex for <script> or </script>
     
     if(elements.length===0){
         console.log("No dangerous XSS commands found");
     }else{
         for(let element of elements){//loop through array of dangerous commmands
-        if(otherSources.includes(element)){// if element is in the other sources array
-        console.log("Sanitized this element: ",replaceValuesInOtherSources(element));
-    }
-    
-    else if((element instanceof HTMLElement || element instanceof SVGElement)){ // if it is a html DOM element, SVG Element or Location object
+            //does not sanitise it
+        if((element instanceof HTMLElement || element instanceof SVGElement)){ // if it is a html DOM element, SVG Element or Location object
         console.log("Dealing with this element...");
         Array.from(element.attributes).forEach(attr => {//loop through each attribute
             element.removeAttribute(attr.name);
         });
-        console.log("All attributes removed from the element.");
+        console.log("All attributes removed from the element: ", element);
 
         // no match needs to be done cause it is being done on DOM nodes
         //this means there is no need to check for equality
@@ -118,8 +108,7 @@ function prevention(elements){//if dangerous label is found this function is cal
                 console.log("Sanitized the script tag by removing it: ",script);
             }   //trim removes whitespace
         })
-    }
-    }
+    }}
     }
     
 }
@@ -157,13 +146,13 @@ async function arrangeTheSources(){
     scriptTag=await getScriptTags(scriptElements); //store script tags
 
     //remove undefined and empty
-    window.otherSources=otherSources.filter(item => item !== undefined && item!=='');//make global and filter out undefined elements
+    //window.otherSources=otherSources.filter(item => item !== undefined && item!=='');//make global and filter out undefined elements
     window.scriptTag=scriptTag; //make global
     
     window.htmlElements=htmlElements; //make global
     
     window.prevention=prevention;
-    allSources=[...window.htmlElements,... window.otherSources,...scriptTag];//use spread operator
+    allSources=[...window.htmlElements,...scriptTag];//use spread operator
     window.allSources=allSources;// make global
 
 }
@@ -185,7 +174,6 @@ main(); //calling the function twice to intialise the variables in the function 
 
 // Set an interval to call the main function every 2 minutes (120000 milliseconds)
 setInterval(main, 120000);
-
 
 
 
