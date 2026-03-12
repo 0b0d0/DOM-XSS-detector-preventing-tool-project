@@ -1,0 +1,14 @@
+This extension only works a Firefox based browsers and the brave browser.
+
+To operate the extension on Firefox based browser:
+1. Type in "about:debugging"
+2. Find where to load temporary extension
+3. Click on the load Temporary button
+4. Select the manifest file and the extension should work
+
+
+To operate the extension on Brave:
+1. Click on the button with 3 lines
+2. Look for extensions and click and manage extensions
+3. Click on the developer mode button
+4. Click on load unpacked and select the folder named extension
