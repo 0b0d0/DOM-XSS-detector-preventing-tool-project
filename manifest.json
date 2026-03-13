@@ -1,52 +1,43 @@
 {
-"manifest_version":2,
-"name":"DOM XSS detector & preventor",
-"description": "This extension scans for vulnerable sources on the web page to prevent DOM XSS, some features on the web page may break.",
-"version":"1.0",
+  "manifest_version": 3,
+  "name": "DOM XSS detector",
+  "description": "This extension scans for vulnerable sources on the web page to prevent DOM XSS, some features on the web page may break.",
+  "version": "1.0",
 
-"icons":{
-    "32": "images/coin.png"
-},
+  "icons": {
+      "32": "images/coin.png"
+  },
 
-"permissions":[ 
-    "cookies",
-    "activeTab",
-    "tabs",
-    "scripting",
-    "management",
-    "https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt",
-    "https://github.com/yogsec/XSS-Payloads/blob/main/dom_based_xss_payloads.txt",
-    "https://raw.githubusercontent.com/pgaijin66/XSS-Payloads/master/payload/payload.txt",
-    "https://raw.githubusercontent.com/payload-box/xss-payload-list/main/Payloads/All-In-One.txt",
-    "storage"
+  "permissions": [
+      "cookies",
+      "activeTab",
+      "tabs",
+      "scripting",
+      "management",
+      "storage",
+      "https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt",
+      "https://github.com/yogsec/XSS-Payloads/blob/main/dom_based_xss_payloads.txt",
+      "https://raw.githubusercontent.com/pgaijin66/XSS-Payloads/master/payload/payload.txt",
+      "https://raw.githubusercontent.com/payload-box/xss-payload-list/main/Payloads/All-In-One.txt"
+  ],
 
-],
+  "content_scripts": [
+      {
+          "matches": ["<all_urls>"],
+          "js": [
+              "javascript/purify.min.js",
+              "javascript/tensorflow.js",
+              "javascript/sourceFinder&Prevention.js",
+              "javascript/popUp.js",
+              "javascript/getDataSets.js",
+              "javascript/ai_model_detection.js"
+          ]
+      }
+  ],
 
-"content_scripts": [
-    {
-        "matches":["<all_urls>"],
-        "js":[
-        "javascript/purify.min.js",
-        "javascript/tensorflow.js",
-        "javascript/sourceFinder&Prevention.js",
-        "javascript/popUp.js",
-        "javascript/getDataSets.js",
-        "javascript/ai_model_detection.js"
-      ]
-    }
-],
-
-"browser_specific_settings": {
-  "gecko": {
-    "id": "sample@example.com"
+  "action": {
+      "default_icon": "images/coin.png",
+      "default_title": "Extension",
+      "default_popup": "interface.html"
   }
-},
-
-"browser_action": {
-  "default_icon":"images/coin.png",
-  "default-title":"Extension",
-  "default_popup": "interface.html"
 }
-}
-
-
