@@ -1,15 +1,4 @@
- /*This does not work cause the extension is loaded temporariliy*/
- 
- function updateCounter(){
-    let counterElement=document.getElementById("counter");
-            //display current value
-    counterElement.innerHTML=window.counter; //changed the value
-    }
-
-   window.updateCounter=updateCounter;
- 
- document.addEventListener("DOMContentLoaded",function(){
-    updateCounter();
+document.addEventListener("DOMContentLoaded",function(){
         const b1 = document.getElementById("b1"); // ON button
         const b2 = document.getElementById("b2"); // OFF button
         const b3=document.getElementById("b3"); //refresh number button
@@ -68,38 +57,26 @@
     b3.onclick= async function (){
         let currentValue;
         let previousValue;
-        previousValue=document.getElementById('counter').innerHTML;
 
+        //Number command converts inner HTML to integer
         //get currecnt value from chrome storage insetad of local storage
         chrome.storage.local.get(['counter','sourcesCounter','safeSourcesCounter'],function(result){
-            currentValue=result.counter; //default 0 if not set
-            if(currentValue!==previousValue){
-                update(currentValue,'counter'); //update current value
-                //current value contains the number from chrome storage
-            } else{
-                alert("Values are the same for first row");
-            }
-
-            //handle sourceCounter in the same call back
-            previousValue=document.getElementById('counterTwo').innerHTML; //get value of inner HTML    
-            currentValue=result.sourcesCounter; //this is equal to the value stored in chrome storage
-            if(currentValue!==previousValue){
-                update(currentValue,'counterTwo'); //length of the array is passed
-                } else{
-                    alert("Values are the same for second row");
+            const counters=[
+                {storageKey:'counter',elementId: 'counter'},
+                {storageKey:'sourcesCounter',elementId: 'counterTwo'},
+                {storageKey:'safeSourcesCounter',elementId: 'counterThree'}
+            ]
+            //loop through array and check each map and replace the element values
+            //result accesses the value of the storagekey
+            counters.forEach(({storageKey,elementId})=>{
+                previousValue=Number(document.getElementById(elementId).innerHTML);
+                currentValue=result[storageKey];//gets value that is stored in chrome storage
+                if(currentValue!==previousValue){
+                    update(currentValue,elementId);
                 }
-
-            previousValue=document.getElementById('counterThree').innerHTML; //get value of inner HTML    
-            currentValue=result.safeSourcesCounter; //this is equal to the value stored in chrome storage
-            if(currentValue!==previousValue){
-                update(currentValue,'counterThree'); //length of the array is passed
-                } else{
-                    alert("Values are the same for third row");
-                }
-
             });
-
             
+        });
 
     }
 
