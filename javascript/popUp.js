@@ -55,16 +55,19 @@ document.addEventListener("DOMContentLoaded",function(){
             }
         }
     b3.onclick= async function (){
-        let currentValue;
+        chrome.tabs.query({active:true, currentWindow:true},tabs=>{
+            const tabId=tabs[0].id;//get tab id
+
+             let currentValue;
         let previousValue;
 
         //Number command converts inner HTML to integer
         //get currecnt value from chrome storage insetad of local storage
-        chrome.storage.local.get(['counter','sourcesCounter','safeSourcesCounter'],function(result){
+        chrome.storage.local.get(['dangerousCounter'+tabId,'sourcesCounter'+tabId,'safeSourcesCounter'+tabId],function(result){
             const counters=[
-                {storageKey:'counter',elementId: 'counter'},
-                {storageKey:'sourcesCounter',elementId: 'counterTwo'},
-                {storageKey:'safeSourcesCounter',elementId: 'counterThree'}
+                {storageKey:'dangerousCounter'+tabId,elementId: 'counter'},
+                {storageKey:'sourcesCounter'+tabId,elementId: 'counterTwo'},
+                {storageKey:'safeSourcesCounter'+tabId,elementId: 'counterThree'}
             ]
             //loop through array and check each map and replace the element values
             //result accesses the value of the storagekey
@@ -74,10 +77,11 @@ document.addEventListener("DOMContentLoaded",function(){
                 if(currentValue!==previousValue){
                     update(currentValue,elementId);
                 }
-            });
+            });   
+        });
             
         });
-
+    
     }
 
     });
