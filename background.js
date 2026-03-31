@@ -5,7 +5,7 @@ chrome.runtime.onMessage.addListener((msg, sender,sendResponse) => {
         const tabId = sender.tab.id;
 
         chrome.storage.local.set({//sets a unique storage id
-            ['sourcesCounter_'+ tabId]: msg.count
+            ['sourcesCounter'+ tabId]: msg.count
         },()=>{
             //send confirmation back to sender
             console.log("Value stored")
@@ -17,3 +17,30 @@ chrome.runtime.onMessage.addListener((msg, sender,sendResponse) => {
         });
     }
 });
+
+chrome.runtime.onMessage.addListener((msg, sender,sendResponse) => {
+    console.log("Message recieved: ",msg);
+    //listens for sent message
+    if (msg.action === "saveTwoCounters") {
+        const tabId = sender.tab.id;
+
+        // Build two  keys
+        const dataToStore = {
+            ['dangerousCounter'+tabId]: msg.counter,
+            ['safeSourcesCounter'+tabId]: msg.safeSourcesCounter
+        };
+
+        chrome.storage.local.set({//sets a unique storage id
+            dataToStore
+        },()=>{
+            //send confirmation back to sender
+            console.log("Values stored")
+            sendResponse({
+                status:"ok",
+                message:"Saved values",
+                storedValue:dataToStore
+            })
+        });
+    }
+});
+
