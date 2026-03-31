@@ -110,7 +110,6 @@ function prevention(elements){//if dangerous label is found this function is cal
         })
     }}
     }
-    
 }
 
 /*DOM observer allows the code to check for any changes in the web page source code*/
@@ -157,18 +156,21 @@ async function arrangeTheSources(){
 
 }
 
+
+
 /*Where main program starts */
 async function main(){
     await arrangeTheSources(); // wait for this to finish before calling next function
     window.runPrediction(window.allSources); // Call runPrediction with allSources
     observeWebpage(); //observe for changes in web page
 
-    // Now trying to display number of all the elemenets that were scanned based on all sources length
-    chrome.storage.local.set({ sourcesCounter: window.allSources.length }, function() {
-        console.log("Number of sources that have been analysed are saved to storage:", window.allSources.length);
-        //when the info is stored something is logged
-        });
-        //each time this function is called the value will refresh to become a new value
+    chrome.runtime.sendMessage({ //send message to bacjground script containing the number of sources
+    action: "saveSources",
+    count: window.allSources.length
+});
+
+
+    
 }
 main(); //calling the function twice to intialise the variables in the function to be used in the other file
 
