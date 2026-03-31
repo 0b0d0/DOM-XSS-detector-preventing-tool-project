@@ -4,7 +4,7 @@ chrome.runtime.onMessage.addListener((msg, sender,sendResponse) => {
     if (msg.action === "saveSources") {
         const tabId = sender.tab.id;
 
-        chrome.storage.local.set({//sets a unique storage id
+        chrome.storage.local.set({//sets a unique storage id and stores data
             ['sourcesCounter'+ tabId]: msg.count
         },()=>{
             //send confirmation back to sender
@@ -25,14 +25,13 @@ chrome.runtime.onMessage.addListener((msg, sender,sendResponse) => {
         const tabId = sender.tab.id;
 
         // Build two  keys
-        const dataToStore = {
+        const dataToStore = {//sets unique storage id
             ['dangerousCounter'+tabId]: msg.counter,
             ['safeSourcesCounter'+tabId]: msg.safeSourcesCounter
         };
 
-        chrome.storage.local.set({//sets a unique storage id
-            dataToStore
-        },()=>{
+        //stores data
+        chrome.storage.local.set(dataToStore,()=>{
             //send confirmation back to sender
             console.log("Values stored")
             sendResponse({
