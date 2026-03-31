@@ -32,8 +32,9 @@ const obfuscatedDangerousPatterns = new RegExp(
     `)`, 'i'
 );
 
-arraysForData=['payloadDataset0','payloadDataset1','payloadDataset2','payloadDataset3'];
-arraysForModelInStorage=["model1","model2","model3","model4"];
+//these are defined so they can be accessed
+let arraysForData=['payloadDataset0','payloadDataset1','payloadDataset2','payloadDataset3'];
+let arraysForModelInStorage=["model1","model2","model3","model4"];
 
 
 function getStoredData(item){ //if this is async it would wait for the promise of fetching all the data
@@ -141,12 +142,15 @@ model.add(tf.layers.dense({ units: 3, activation: 'softmax' }));
     }).then(() => { //uses the promise if it was successful
         console.log("Model training complete for the model",index+1);
         completeCounter++;//add counter by 1
+        //a number is added to the string model so it can be accessed using the defined arrays above
         localStorage.setItem("model"+(completeCounter), JSON.stringify(model.toJSON()));
+        
         if(completeCounter===dataSets.length){
             console.log("ALL MODELS TRAINED, READY TO COMBINE ");
         }
     }).catch(error => {
         console.error("Error during training:", error);
+        
     });
     trainedPromises.push(trainedPromise);
     });
@@ -193,7 +197,7 @@ async function loadModels(){
         console.log("Models have already been added");
         return models; //when the main function is called again
     }else{
-        for(z=1;z<4;z++){
+        for(z=1;z<4;z++){// it is 4 cause i know how many models are being made
         const modelData=JSON.parse(localStorage.getItem("model"+z));
         if(!modelData){
             console.error("Model data is not valid:", modelName);
@@ -309,7 +313,7 @@ async function processPayloads(input,models){
         let classfication=assignCategory(finalPrediction);
         //get original payload
         
-        let originalPayload=input[inputDataTensors.indexOf(inputData)];//get index of value
+        let originalPayload=input[inputDataTensors.indexOf(inputData)];//get index of value of the original element
         
         //checks if the data matches one of these labels
 
@@ -330,15 +334,13 @@ async function processPayloads(input,models){
             
         }
     }
-    // Now save the updated counter to chrome.storage
-        chrome.storage.local.set({ counter: dangerousPayloads.length }, function() {
-            console.log("Number of detected XSS payloads have been saved to storage:", dangerousPayloads.length, ); //when the info is stored soething is logged
-        }); //each time this function is called the value will refresh to become a new value
 
-        chrome.storage.local.set({ safeSourcesCounter: safeSources.length }, function() {
-            console.log("Number of detected safe sources have been saved to storage:", safeSources.length, ); //when the info is stored soething is logged
-        }); //each time this function is called the value will refresh to become a new value
-    
+        chrome.runtime.sendMessage({ //send message to background script containing the number of sources detected
+        action: "saveTwoCounters",
+        counter: dangerousPayloads.length,
+        safeSourcesCounter:safeSources.length
+        });
+
         window.dangerousPayloads=dangerousPayloads;
         //once loop is done run prevention
         //window.prevention(dangerousPayloads)
@@ -348,7 +350,6 @@ async function processPayloads(input,models){
 window.processPayloads=processPayloads;
 
 async function runPrediction(input){
-    //console.log("Checking this function works",loadModels());
     //length of datasets is equal to length of models
     try {
         if(input.length==0){//if there is no data do nothing
@@ -356,7 +357,8 @@ async function runPrediction(input){
     }else{
        
         await window.fetchAllData(); // Using await for cleaner promise handling
-
+    
+        
         await checkAndTrainModels(); // Wait for models to be trained
 
         const models = await loadModels(); // Load and stores models only once
