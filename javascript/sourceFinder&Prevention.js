@@ -167,8 +167,12 @@ async function main(){
     chrome.storage.local.set({ sourcesCounter: window.allSources.length }, function() {
         console.log("Number of sources that have been analysed are saved to storage:", window.allSources.length);
         //when the info is stored something is logged
-        });
-        //each time this function is called the value will refresh to become a new value
+        }); //each time this function is called the value will refresh to become a new value
+
+      chrome.runtime.sendMessage({ //send message to bacjground script containing the number of sources detected
+    action: "saveSources",
+    count: window.allSources.length
+});
 }
 main(); //calling the function twice to intialise the variables in the function to be used in the other file
 
