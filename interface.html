@@ -10,7 +10,7 @@
 <script src="/javascript/sourceFinder&Prevention.js" defer></script>
 <script src="/javascript/popUp.js" defer ></script>
 <script src="/javascript/getDataSets.js" defer></script>
-<script  src="/javascript/ai_model_detection.js" defer></script>
+<script type="module" src="/javascript/ai_model_detection.js" defer></script>
 <!--Module enables import/export-->
 </head>
 <body>
@@ -19,10 +19,11 @@
         <button id="b2">OFF</button>
         <button id="b3">Refresh numbers</button>
         <p>DOM XSS Defender Extension</p>
-        <!--trying to show anumber that is added based on the number of payloads found-->>
-        <b>Number of malicous JavaScript payloads detected:</b><p id="counter">0</p>
-        <b>Total number of sources detected:</b><p id="counterTwo">0</p>
-        <b>Total number of safe sources detected:</b><p id="counterThree">0</p>
+        <!--trying to show anumber that is added based on the number of payloads found-->
+        <b>Number of suspicious DOM elements detected:</b><p id="counter">0</p>
+        <b>Total number of elements detected:</b><p id="counterTwo">0</p>
+        <b>Total number of safe elements detected:</b><p id="counterThree">0</p>
+        <!--Should replaced the word "sources" with "sinks", a mistake was made-->
     </div>
 
 </body>
