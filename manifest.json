@@ -1,7 +1,7 @@
 {
 "manifest_version":2,
 "name":"DOM XSS detector",
-"description":"This extensions scans for vulnerable sources on the web page to prevent DOM XSS, some features on the web page may break,",
+"description":"This extensions scans for vulnerable elements on the web page to prevent DOM XSS, some features on the web page may break,",
 "version":"1.0",
 
 "icons":{
