@@ -1,11 +1,13 @@
-/*Sources wehre the attack occurs by placing the sink in the source
+/*Sinks are where the attack occur
 [""] allows it look for each element that uses the source
 and it applies to jquery style selectors*/
+
+//I made a mistake these sources are actually SINKS
 
 //most of the sources output data types that are strings
 //only one of them displays Location object
 
-const htmlSources = [ //query selector function returns elements using this format [source]
+const htmlSources = [ //query selector function returns elements using this format [event attribute]
     "[href]", "[src]", "[onclick]", "[onload]", "[onkeydown]", "[onmousedown]", "[onerror]",
     "[ondrag]", "[oncopy]", "[onmouseover]", "[onloadstart]","[onfocus]", "[onsubmit]", "[onchange]",
      "[onpaste]", "[oninput]", "[oncontextmenu]", "[onblur]", "[style]","[onscroll]"
@@ -14,9 +16,8 @@ const htmlSources = [ //query selector function returns elements using this form
 //these only store one array with node lists i want to make each source have its own seperate array to compare
 const foundHtmlSources=[]; 
 
-/*this stores the sources as well as the elemnts that use them but that contains an array with many arrays inside the one array
+/*this the elemnts that use items in the sources array. The returned value contains an array with sub arrays
 so i try it make easier to  manage
-
 it gets the elements that use the selected sources depending on the source array chosen*/
 async function searchForSources(sources,li){
     /*loop through each item in the source list*/
@@ -67,10 +68,10 @@ const seperateHtmlArray=[];
                 container.push(sourceHolder[z][y]);
             } 
         }
-    }
+    } //the elements are seperate arrays to be analysed and the function combines the node lists into one ARRAY
     return container;
 }
-//the elements are seperate arrays to be analysed and the function combines the node lists into one ARRAY
+
 
 function replaceValuesInOtherSources(item){//returns the sanitised value in the array
     let sanitisedVersion;
@@ -164,7 +165,7 @@ async function main(){
     window.runPrediction(window.allSources); // Call runPrediction with allSources
     observeWebpage(); //observe for changes in web page
 
-    chrome.runtime.sendMessage({ //send message to bacjground script containing the number of sources
+    chrome.runtime.sendMessage({ //send message to background script containing the number of sources
     action: "saveSources",
     count: window.allSources.length
 });
@@ -174,8 +175,8 @@ async function main(){
 }
 main(); //calling the function twice to intialise the variables in the function to be used in the other file
 
-// Set an interval to call the main function every 2 minutes (120000 milliseconds)
-setInterval(main, 120000);
+// Set an interval to call the main function every 30 seconds
+setInterval(main, 30000);
 
 
 
