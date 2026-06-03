@@ -3,4 +3,6 @@ This tool was developed to scan the web pages source code and run through each e
 **How it works**
 The extension works by checking the web page for vulnerable code in the web page. It bundles up the vulnerable pieces of code, checks each of them and assigns a classifcation value to each vulnerable picece of code whether it is safe, unrecongnised or dangerous.
 
-**Here are some Images**
+**Image of extension**
+<img width="1917" height="966" alt="image" src="https://github.com/user-attachments/assets/063632c5-edac-4fb6-9199-8d16c28dc554" />
+
