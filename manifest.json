@@ -14,10 +14,8 @@
     "tabs",
     "scripting",
     "management",
-    "https://raw.githubusercontent.com/adham-hashem/XSS-payloads/main/Payloads.txt",
-    "https://github.com/yogsec/XSS-Payloads/blob/main/dom_based_xss_payloads.txt",
-    "https://raw.githubusercontent.com/pgaijin66/XSS-Payloads/master/payload/payload.txt",
-    "https://raw.githubusercontent.com/payload-box/xss-payload-list/main/Payloads/All-In-One.txt",
+    "https://raw.githubusercontent.com/*",
+    "https://github.com/*",
     "storage"
 
 ],
