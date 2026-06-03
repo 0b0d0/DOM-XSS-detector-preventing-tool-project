@@ -15,7 +15,7 @@ async function getDataSet(url,num){//async makes function return a promise
         const response= await fetch(url[num]);
         //check if the server responded
         if(!response.ok){
-            console.log("The server responded");
+            console.log("The server responded"); 
         }
         
         
