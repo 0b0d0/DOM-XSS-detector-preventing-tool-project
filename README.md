@@ -6,3 +6,5 @@ The extension works by checking the web page for vulnerable code in the web page
 **Image of extension**
 <img width="1917" height="966" alt="image" src="https://github.com/user-attachments/assets/063632c5-edac-4fb6-9199-8d16c28dc554" />
 
+**Warning**
+The extension may stop some features of the website working.
