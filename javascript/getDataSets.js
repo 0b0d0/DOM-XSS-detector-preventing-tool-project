@@ -13,9 +13,9 @@ async function getDataSet(url,num){//async makes function return a promise
     try{
         let payloadDataSet;
         const response= await fetch(url[num]);
-        //check if reponse is good
+        //check if the server responded
         if(!response.ok){
-            throw new Error("HTTP error! status:", response.status);
+            console.log("The server responded");
         }
         
         
